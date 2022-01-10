@@ -1,7 +1,7 @@
 Write a method that counts down to zero using recursion.
 
 ##### MY SOLUTION
-```
+```ruby
 def countdownCycle(i)
   if i == 0
     puts "Happy New Ye-"

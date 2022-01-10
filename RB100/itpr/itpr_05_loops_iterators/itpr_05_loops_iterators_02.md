@@ -2,7 +2,7 @@ Write a while loop that takes input from the user, performs an action, and only 
 
 
 ##### MY SOLUTION
-```
+```ruby
 def mahna_mahna
   puts "dut doooo do do do..."
   puts "dut do do dooo..."
