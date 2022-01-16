@@ -1,15 +1,14 @@
 ### README ###
 
-*This repo is dedicated to Launch School exercises or programs.*
+*This repo is dedicated to Launch School courses and lessons.*
 
 # 
 
-**Introduction to Programming Ruby** (```itpr```)
-
 Directory format:
-  - Each folder = chapter.
-  - Each file = exercise or Ruby program.
+  - Each folder    = Course Number.
+  - Each Subfolder = Lesson Number.
+  - Each file      = exercise or Ruby program.
 
 File format:
 
-```book_chapterNumber_chapterName_exerciseNumber```
+`CourseNumber_LessonNumber_ProgramName`
