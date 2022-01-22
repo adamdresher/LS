@@ -7,7 +7,6 @@ Mortgage / Car Loan Calculator
 ------------------------
 Create a mortgage / car loan calculator.  Using three given values (the loan amount, APR, and loan duration), calculate the monthly interest rate, loan duration in months, and monthly payments.
 
-
 -  Inputs:
 	- the loan amount
 	- the Annual Percentage Rate (APR)
@@ -27,7 +26,7 @@ Create a mortgage / car loan calculator.  Using three given values (the loan amo
 
 **Problem Domain:**
 - math formula (choose more expressive names for local variables):
-	- `m = p (j / (1 - (1 + j)**(-n)))`
+	- `m = p * (j / (1 - (1 + j)**(-n)))`
 	- m = monthly payment
 	- p = loan amount
 	- j = monthly interest rate
@@ -36,14 +35,14 @@ Create a mortgage / car loan calculator.  Using three given values (the loan amo
 ---
 
 **Implicit Requirements:**
-- convert APR to monthly interest rate
-- convert loan duration to loan duration in months
-- 
+- calculate monthly interest rate using:   APR
+- calculate loan duration in months using: loan duration in years
+- calculate the monthly payment using:     loan amount, monthly interest rate, loan duration in months
 ---
 
 **Clarifying Questions:**
 1. Is APR given as an integer (0 - 100) or a float?
-  - 
+  - A float from 0.00 - 100.00.
 2. Is the loan amount a float or integer?
   - Integers make the most sense.  People receive loans for whole dollars, not cents.
 3. Is the loan duration given in years or months?
@@ -52,7 +51,62 @@ Create a mortgage / car loan calculator.  Using three given values (the loan amo
 ---
 
 **Mental Model:**
-- Create a program asks user for 3 inputs: loan amount (as an integer- whole dollars), APR (as a float number between 0.00 - 100.00), and loan duration (as an integer- years).  Next, divide APR by 12 months to determine monthly interest rate.  Divide the loan duration by 12 months to determine the loan duration in months.  Calculate the monthly payment by inputting new variables into the given formula.  Finally output a string that states the monthly payment, loan duration in months, and monthly interest rate.
+- Create a program that asks user for her/his name, then asks for 3 inputs: loan amount, loan duration, & APR.  Calculate the loan duration in months by multiplying the loan duration in years by 12 months.  Calculate the monthly interest rate by divide APR by 12 months.  Calculate the monthly payment by inputting into the given formula: loan amount, loan duration in months, & monthly interest rate.  Print a summary of the loan details.
+
+Pseudo-Code:
+- Create a program that asks user for her/his name, then greets user.
+- Ask user for the loan amount, then verify the input is an integer.
+- Ask user for the loan duration in years, then verify the input as an integer.
+- Ask user for the APR, then verify the input is a float number between 0.00 and 100.00.
+- Calculate the loan duration in months.  Multiply loan duration in years by 12.
+- Calculate the monthly interest rate.  Divide APR by 12.
+- Calculate the monthly payment.  m = p * (j / (1 - (1 + j)**(-n)))
+- Print a summary of the loan details.
+
+Pseudo-Code, expanded:
+- Ask user for her/his name
+  - If name is nil, then ask again
+  - Else greets user
+
+- Ask user for the loan amount
+  - If loan amount is an integer greater than 0
+    - Return input
+  - Else ask again
+
+- Ask user for the loan duration in years
+  - If loan duration in years is an integer greater than 0
+    - Return input
+  - Else
+    - Ask again
+
+- Ask user for the APR
+  - If APR is a float number between 0.00 and 100.00
+    - Return input
+  - Else
+    - Ask again
+
+- Read loan duration in years
+  - Multiply loan duration in years by 12
+  - Set return to loan duration in months
+
+- Read APR
+  - Divide APR by 12
+  - Set return to monthly interest rate
+
+- Read loan amount, loan duration in years, monthly interest rate
+  - m = p * (j / (1 - (1 + j)**(-n)))
+  - Set return to loan payment
+
+- Read loan duration in months, loan payment
+  - Multiply loan duration in months by loan payment
+  - Set return to total cost
+
+-Read loan amount, total cost
+  - Subtract loan amount from total cost
+  - Set return to total interest
+
+- Read loan amount, loan duration in months, loan payment, monthly interest rate, total cost, total interest
+  - Print a summary of the loan details
 
 ---
 
@@ -61,33 +115,37 @@ Examples / Test Cases / Edge Cases
 
 **Examples:**
 
--  Example 1
-  -  Inputs:
-  -  Output:
--  Example 2
-  -  Inputs:
-  -  Output:
+-  Example TEMPLATE
+  -  Inputs: (loan_amount, duration_years, apr)
+  -  Output: (loan_amount, duration_months, loan_payment, monthly_interest_rate, total_interest, total_cost)
 
 ---
 
 _Your Test Cases:_
 
+-  Example 1
+  -  Inputs: (24_000, 5, 5.0)
+  -  Output: (24_000, 60, 452.91, 0.0042, 3_174.58, 27_174.58)
+-  Example 2
+  -  Inputs: (100_000, 4, 3.5) # works with `apr = (apr / 100) / 12`
+  -  Output: (100_000, 48, 2,235.60, 0.0029, 7_308.81, 107_308.81)
 -  Example 3
-  -  Inputs:
-  -  Output:
+  -  Inputs: (50_000, 3, 20.0)
+  -  Output: (50_000, 36, 1,858.18, 0.0167, 16,894.45, 66,894.45)
 
 ---
 
 _Your Edge Cases:_
 
 -  Example 4
-  -  Inputs:
-  -  Output:
+  -  Inputs: (10_000, 1, 0.0)
+  -  Output: (10_000, 12, 833.33, 0.0, 0.0, 10_000)
 
 ---
 
 Data Structure
 --------------
+Possibly a hash.
 
 ---
 
@@ -95,53 +153,75 @@ Algorithm
 ---------
 - START
 
-- DEF greeting
+- SET prompt
+  - PRINT formated message
 
-- DEF loan_amount
+- SET valid_number?
+  - IF number > 0
+  - RETURN true
+
+- SET float?
+  - IF number is a float number
+  - RETURN true
+
+- SET formatting
+  - SET input to two decimals deep
+
+- SET greeting
   - LOOP
-    - PRINT request for input
-      - GET input as an integer
-      - SET amount = input
-        - IF amount <= 0
-          - PRINT error.
-          - restart loop
-        - ELSE return amount
+    - GET name = input
+    - IF name == nil
+      - PRINT error
+      - NEXT iteration
+    - ELSE
+      - PRINT greeting
 
-- DEF loan_duration_years
-  - PRINT request for input
-    - GET input and check it's an integer
+- SET loan_amount
+  - LOOP
+    - GET amount = input
+    - IF amount == valid_number?
+      - RETURN amount
+    - ELSE
+      - NEXT iteration
 
+- SET loan_duration_in_years
+  - LOOP
+    - GET duration = input
+    - IF duration == valid_number?
+      - RETURN duration
+    - ELSE
+      - NEXT iteration
 
-- DEF annual_percentage_rate
-  - PRINT request for input
-    - GET input as a float percentage of 100.00
+- SET apr
+  - LOOP
+  - GET apr = input
+  - IF apr == float number (0.00...100.00)
+    - RETURN input
+  - ELSE
+    - NEXT iteration
 
+- SET loan_payment
+  - READ amount, monthly_interest_rate, duration_months
+  - calculate amount * (monthly_interest_rate / (1 - (1 + monthly_interest_rate)**(-duration_months)))
 
-- DEF loan_duration_months
-  - READ years
-    - SET loan_duration_months = years / 12
+- READ greeting
 
-- DEF monthly_interest_rate
-  - READ apr
-    - SET monthly_interest_rate = apr / 12
+- READ loan_amount
+  - SET amount = return value
 
-- DEF monthly_payment
-  - READ amount, monthly_interest_rate, loan_duration_months
-    - SET monthly_payment = amount * (monthly_interest_rate / (1 - (1 + monthly_interest_rate)**(-loan_duration_months)))
+- READ loan_duration_in_years
+  - SET duration_months = loan_duration_in_years * 12
 
-- DEF summary
-  - READ amount, monthly_payment, loan_duration_months, monthly_interest_rate
-  - PRINT string
+- READ apr
+  - SET monthly_interest_rate = (apr / 100) / 12
 
-- PRINT greeting
-- PRINT loan_amount
-  - SET amount = return
-- PRINT loan_duration_years
-  - SET years = return
-- PRINT annual_percentage_rate
-  - SET apr = return
+- SET payment = loan_payment
 
-- PRINT summary
+- SET total_cost = duration_months * loan_payment
+
+- SET total_interst = total_cost - loan_amount
+
+- PRINT summary of loan details with: amount, duration_months, loan_payment, monthly_interest_rate, total_cost, total_interest
 
 - END
 ---
@@ -154,76 +234,94 @@ def prompt(message)
   puts("==> #{message}")
 end
 
-def greeting
-  prompt("Welcome to the loan calculator.  What's your name?")
-  name = gets.chomp
-  prompt("Thanks #{name}, let's get started with your loan.")
-  name
+def valid_number?(num)
+  num > 0
 end
 
-def loan_amount
-  loop do
-    prompt("What is the total amount you would like to take out as a loan?")
-    amount = gets.to_f
+def float?(num)
+  Float(num) rescue false
+end
 
-    if amount <= 0
-      prompt("Oh I'm sorry, I can only calculate loans greater than zero dollars.\n\
-    Would you like to try a different amount?  (Press 'y' to enter a different amount)")
-      try_again = gets.chomp.downcase
-      unless try_again == 'y'
-        prompt("Okay, goodbye.")
-        break
-      end
+def formatting(num)
+  format("%#.2f", num)
+end
+
+def greeting
+  loop do
+    prompt("Welcome to the loan calculator.  What's your name?")
+    name = gets.chomp
+    if name.nil?
+      prompt("Sorry, please enter your name:")
+      next
     else
-      return amount
+      prompt("Thanks #{name}, let's calculate your loan!")
+      break
     end
   end
 end
 
-def loan_duration_years
-  prompt("How many years would you like the loan to last?")
-  gets.to_i
+def loan_amount
+  prompt("What is the total amount you would like to take out as a loan?")
+  loop do
+    amount = gets.to_i
+    if valid_number?(amount)
+      return amount
+    else
+      prompt("Oh I'm sorry, I can only calculate loans greater than zero dollars.")
+      prompt("Please pick a number greater than zero:")
+      next
+    end
+  end
 end
 
-def annual_percentage_rate
-  prompt("What would you like the APR to be set at?")
-  gets.to_f
+def loan_duration_in_years
+  loop do
+    prompt("How many years would you like the loan to last?")
+    duration = gets.to_i
+    if valid_number?(duration)
+      return duration
+    else
+      prompt("Sorry, that's not a valid input.")
+      next
+    end
+  end
 end
 
-def loan_duration_months(years)
-  years * 12
+def apr
+  loop do
+    prompt("What would you like the APR to be set at?")
+    apr = gets.chomp
+    if float?(apr)
+      return apr.to_f
+    else
+      prompt("Sorry, that's not a valid input.")
+      next
+    end
+  end
 end
 
-def monthly_interest_rate(apr)
-  # (apr / 100) / 12
-  apr / 12
-end
-
-def monthly_payment(amount, loan_duration_months, monthly_interest_rate)
-  payments = amount * (monthly_interest_rate / (1 - (1 + monthly_interest_rate)**(-loan_duration_months)))
-  Float(format("%0.2f", payments))
-end
-
-def summary(amount, payments, months, rate)
-  prompt("Based on the information you've given me, here's what you can expect:\
-  \n\nYour loan is $#{amount}.\
-  \nYour payments will be $#{payments}/month.\
-  \nThere will be #{months} payments.\
-  \nThe monthly interest rate will be #{rate}%.")
+def loan_payment(amount, monthly_interest_rate, duration_months)
+  if monthly_interest_rate == 0
+    amount / duration_months.to_f
+  else
+    num = (monthly_interest_rate + 1)**(-duration_months)
+    num = (monthly_interest_rate / (1 - num))
+    num = num * amount
+  end
 end
 
 greeting
-# if nil # trying to exit program if user chooses no in greeting
-#   break
-# end
 amount = loan_amount
-months = loan_duration_months(loan_duration_years)
-rate = monthly_interest_rate(annual_percentage_rate)
-payments = monthly_payment(amount, months, rate)
-summary(amount, payments, months, rate)
+duration_months = loan_duration_in_years * 12
+monthly_interest_rate = (apr / 100) / 12
+payment = loan_payment(amount, monthly_interest_rate, duration_months)
+total_cost = duration_months * payment
+total_interest = total_cost - amount
 
-
-# exit program if user chooses not to enter a valid loan amount
-# validate name
-# validate loan_duration
-# validate apr
+prompt("Based on the information you've given me, here's what you can expect:\n\n\
+Your loan amount is $#{amount}.\n\
+There will be a total of #{duration_months} payments.\n\
+Your monthly payments will be $#{formatting(payment)}/month.\n\
+The monthly interest rate will be approximately #{format('%#.4f', monthly_interest_rate)}%.\n\
+The total amount of interest accrued will be $#{formatting(total_interest)}.\n\
+The total cost paid for the loan will be $#{formatting(total_cost)}.")
