@@ -1,0 +1,35 @@
+
+english:
+  welcome: "Welcome to Calculator! Enter your name:"
+  valid_name: "Make sure to use a valid name."
+  greeting: "Hi %{name}!" # string interpolation is not functioning
+  first_num: "What's the first number?"
+  valid_num: "Hmm... that doesn't look like a valid number."
+  second_num: "What's the second number?"
+  operation_prompt: "What operation would you like to perform?\n  1) add\n  2) subtract\n  3) multiply\n  4) divide"
+  add: 'Adding '
+  subtract: 'Subtracting' 
+  multiply: 'Multiplying '
+  divide: 'Dividing '
+  valid_operator: "Must choose 1, 2, 3, or 4"
+  processing: "#{operation_to_message} the two numbers..."
+  result: "The result is #{result}"
+  again?: "Do you want to perform another calculation? (Y to calculate again)"
+  goodbye: "Thank you for using the calculator.  Goodbye!"
+italiano: 
+  welcome: "Buonvenuto nella calcolatrice!  Inserisci il tuo nome:"
+  valid_name: "Assicurati di utilizzare un namome valido."
+  greeting: "Ciao #{name}!"
+  first_num: "Qual è il primo numero?"
+  valid_num: "Hmm... non sembra un numero valido."
+  second_num: "Qual è il secondo numero?"
+  operation_prompt: "Che operazione vorresti eseguire?\n  1) addizionare\n  2) sottrarre\n  3) moltiplicare\n  4) dividere"
+  add: 'Aggiungendo '
+  subtract: 'Sottraendo' 
+  multiply: 'Moltiplicando '
+  divide: 'Divideno '
+  valid_operator: "Devi scegliere 1, 2, 3, or 4"
+  processing: "#{operation_to_message(operator)} i nuovi numeri..."
+  result: "Il risultato è #{result}"
+  again?: "Vuoi eseguire un altro calcolo? (Y per calcolare di nuovo)"
+  goodbye: "Grazie per aver usato la calcolatrice.  Ciao!"
