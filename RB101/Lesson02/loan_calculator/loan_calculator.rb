@@ -1,37 +1,52 @@
+# Program defined:
 require 'yaml'
 MESSAGES = YAML.load_file('loan_calculator_messages.yml')
+
+def clear_screen
+  system("clear") || system("cls")
+end
 
 def prompt(message)
   puts("==> #{MESSAGES[message]}")
 end
-# def prompt(message, custom = '')
-  # text = format(MESSAGES[message])
-  # text = format(MESSAGES[message], custom: custom)
-  # puts("==> #{text}")
-# end
 
-def formatted(num)
-  format('%#.2f', num)
+def prompt_(message)
+  puts("\n==> #{MESSAGES[message]}")
 end
 
-def valid_number?(num)
-  num > 0
+def formatted(input)
+  number         = format('%#0.2f', input)
+  num_with_comma = []
+
+  number.chars.reverse.each_with_index do |num, index|
+    if index % 3 == 0 && ([0, 3].include?(index) == false)
+      num_with_comma.push(',')
+    end
+    num_with_comma.push(num)
+  end
+
+  num_with_comma.reverse.join
 end
 
-def float?(num)
-  Float(num) rescue false
+def valid_number?(input)
+  input > 0
+end
+
+def float?(input)
+  input.to_f.to_s = input
 end
 
 def greeting
-  system("clear") || system("cls")
+  clear_screen
   prompt('hi')
+  sleep(1)
+  prompt_('name')
   loop do
     name = gets.chomp
     if name == ''
       prompt('invalid_name')
     else
       puts("==> Thanks #{name}, let's calculate your loan!")
-      # prompt('valid_name', name)
       break
     end
   end
@@ -39,13 +54,11 @@ end
 
 def loan_amount
   sleep(1)
-  system("clear") || system("cls")
-  prompt('loan_amount')
+  prompt_('loan_amount')
   loop do
     amount = gets.to_i
     if valid_number?(amount)
       puts("==> Okay, the loan amount is set to $#{formatted(amount)}.")
-      # prompt('valid_amount', formatted(amount))
       return amount
     else
       prompt('invalid_amount')
@@ -56,9 +69,8 @@ end
 
 def loan_duration_in_years
   sleep(1)
-  system("clear") || system("cls")
   loop do
-    prompt('loan_duration')
+    prompt_('loan_duration')
     duration = gets.to_i
     valid_number?(duration) ? (return duration) : prompt('invalid_duration')
   end
@@ -66,8 +78,7 @@ end
 
 def apr
   sleep(1)
-  system("clear") || system("cls")
-  prompt('set_apr')
+  prompt_('set_apr')
   loop do
     apr = gets.chomp
     float?(apr) ? (return apr.to_f) : prompt('invalid_apr')
@@ -83,6 +94,32 @@ def loan_payment(amount, monthly_rate, duration_months)
   end
 end
 
+def processing(count)
+  clear_screen
+  prompt('one_moment')
+  count.times do |num|
+    dots = '.' * (num + 1)
+    puts("Processing#{dots}")
+    sleep(0.4)
+  end
+  puts("Processing#{('.' * count)} Done!")
+  sleep(1)
+end
+
+def summary(amount, duration_months, payment, rate, total_cost)
+  sleep(1)
+  clear_screen
+  puts("==> Based on the information you've given me, \
+here's what you can expect:\n\n\
+    Your loan amount is $#{formatted(amount)}\n\
+    There will be a total of #{duration_months} payments\n\
+    Your monthly payments will be $#{formatted(payment)}/month\n\
+    The monthly interest rate will be approximately #{formatted(rate)}%\n\
+    The total interest accrued will be $#{formatted(total_cost - amount)}\n\
+    The total cost paid for the loan will be $#{formatted(total_cost)}\n\n")
+end
+
+# Program begins:
 greeting
 
 loop do
@@ -91,31 +128,16 @@ loop do
   rate                  = apr / 12 # print only
   monthly_rate          = rate / 100
   payment               = loan_payment(amount, monthly_rate, duration_months)
-
   total_cost            = duration_months * payment
-  total_interest        = total_cost - amount
-  sleep(1)
-  prompt('processing3')
-  sleep(0.5)
-  prompt('processing2')
-  sleep(0.5)
-  prompt('processing1')
-  sleep(0.5)
-  prompt('processing0')
-  sleep(1)
-  system("clear") || system("cls")
-  puts("==> Based on the information you've given me, \
-here's what you can expect:\n\n\
-    Your loan amount is $#{formatted(amount)}.\n\
-    There will be a total of #{duration_months} payments.\n\
-    Your monthly payments will be $#{formatted(payment)}/month.\n\
-    The monthly interest rate will be approx. #{formatted(rate)}%.\n\
-    The total interest accrued will be $#{formatted(total_interest)}.\n\
-    The total cost paid for the loan will be $#{formatted(total_cost)}.\n\n")
+
+  processing(10)
+
+  summary(amount, duration_months, payment, rate, total_cost)
 
   prompt('loop?')
   if gets.chomp == 'y'
     prompt('new_loan')
+    sleep(1.5)
   else
     puts('')
     prompt('goodbye')
