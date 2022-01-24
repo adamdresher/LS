@@ -3,7 +3,7 @@ require 'yaml'
 MESSAGES = YAML.load_file('loan_calculator_messages.yml')
 
 def clear_screen
-  system("clear") || system("cls")
+  system("clear")
 end
 
 def prompt(message)
@@ -33,7 +33,13 @@ def valid_number?(input)
 end
 
 def float?(input)
-  input.to_f.to_s = input
+  case input.to_f.to_s
+    when input         then true
+    when input + '0'   then true
+    when input +'.0'   then true
+    when input + '0.0' then true
+    else                    false
+  end
 end
 
 def greeting
@@ -52,9 +58,9 @@ def greeting
   end
 end
 
-def loan_amount
+def get_amount
   sleep(1)
-  prompt_('loan_amount')
+  prompt_('set_amount')
   loop do
     amount = gets.to_i
     if valid_number?(amount)
@@ -62,21 +68,20 @@ def loan_amount
       return amount
     else
       prompt('invalid_amount')
-      prompt('new_amount')
     end
   end
 end
 
-def loan_duration_in_years
+def get_duration_years
   sleep(1)
+  prompt_('set_duration')
   loop do
-    prompt_('loan_duration')
     duration = gets.to_i
     valid_number?(duration) ? (return duration) : prompt('invalid_duration')
   end
 end
 
-def apr
+def get_apr
   sleep(1)
   prompt_('set_apr')
   loop do
@@ -111,9 +116,9 @@ def summary(amount, duration_months, payment, rate, total_cost)
   clear_screen
   puts("==> Based on the information you've given me, \
 here's what you can expect:\n\n\
-    Your loan amount is $#{formatted(amount)}\n\
+    The loan amount is $#{formatted(amount)}\n\
     There will be a total of #{duration_months} payments\n\
-    Your monthly payments will be $#{formatted(payment)}/month\n\
+    The monthly payments will be $#{formatted(payment)}/month\n\
     The monthly interest rate will be approximately #{formatted(rate)}%\n\
     The total interest accrued will be $#{formatted(total_cost - amount)}\n\
     The total cost paid for the loan will be $#{formatted(total_cost)}\n\n")
@@ -123,9 +128,9 @@ end
 greeting
 
 loop do
-  amount                = loan_amount
-  duration_months       = loan_duration_in_years * 12
-  rate                  = apr / 12 # print only
+  amount                = get_amount
+  duration_months       = get_duration_years * 12
+  rate                  = get_apr / 12 # print only
   monthly_rate          = rate / 100
   payment               = loan_payment(amount, monthly_rate, duration_months)
   total_cost            = duration_months * payment
@@ -138,6 +143,7 @@ loop do
   if gets.chomp == 'y'
     prompt('new_loan')
     sleep(1.5)
+    clear_screen
   else
     puts('')
     prompt('goodbye')
