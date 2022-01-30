@@ -34,22 +34,24 @@ end
 
 def float?(input)
   case input.to_f.to_s
-    when input         then true
-    when input + '0'   then true
-    when input +'.0'   then true
-    when input + '0.0' then true
-    else                    false
+  when input         then true
+  when input + '0'   then true
+  when input + '.0'  then true
+  when '0' + input   then true
+  when input + '0.0' then true
+  else                    false
   end
 end
 
 def greeting
   clear_screen
   prompt('hi')
-  sleep(1)
+  sleep(0.5)
   prompt_('name')
   loop do
     name = gets.chomp
-    if name == ''
+    # if name == ''
+    if name.chars.all?(' ')
       prompt('invalid_name')
     else
       puts("==> Thanks #{name}, let's calculate your loan!")
@@ -59,7 +61,7 @@ def greeting
 end
 
 def get_amount
-  sleep(1)
+  sleep(0.5)
   prompt_('set_amount')
   loop do
     amount = gets.to_i
@@ -73,7 +75,7 @@ def get_amount
 end
 
 def get_duration_years
-  sleep(1)
+  sleep(0.5)
   prompt_('set_duration')
   loop do
     duration = gets.to_i
@@ -82,15 +84,19 @@ def get_duration_years
 end
 
 def get_apr
-  sleep(1)
+  sleep(0.5)
   prompt_('set_apr')
   loop do
     apr = gets.chomp
-    float?(apr) ? (return apr.to_f) : prompt('invalid_apr')
+    if !float?(apr) || apr == ''
+      prompt('invalid_apr')
+    else
+      return apr.to_f
+    end
   end
 end
 
-def loan_payment(amount, monthly_rate, duration_months)
+def calc_loan_payment(amount, monthly_rate, duration_months)
   if monthly_rate == 0
     amount / duration_months.to_f
   else
@@ -105,10 +111,9 @@ def processing(count)
   count.times do |num|
     dots = '.' * (num + 1)
     puts("Processing#{dots}")
-    sleep(0.4)
+    sleep(0.2)
   end
   puts("Processing#{('.' * count)} Done!")
-  sleep(1)
 end
 
 def summary(amount, duration_months, payment, rate, total_cost)
@@ -124,29 +129,34 @@ here's what you can expect:\n\n\
     The total cost paid for the loan will be $#{formatted(total_cost)}\n\n")
 end
 
+def get_calc_again?
+  prompt('loop?')
+  if gets.chomp == 'y'
+    prompt('new_loan')
+    sleep(1)
+    clear_screen
+    true
+  else
+    puts('')
+    prompt('goodbye')
+    false
+  end
+end
+
 # Program begins:
 greeting
 
 loop do
-  amount                = get_amount
-  duration_months       = get_duration_years * 12
-  rate                  = get_apr / 12 # print only
-  monthly_rate          = rate / 100
-  payment               = loan_payment(amount, monthly_rate, duration_months)
-  total_cost            = duration_months * payment
+  amount           = get_amount
+  duration_months  = get_duration_years * 12
+  rate             = get_apr / 12 # print only
+  monthly_rate     = rate / 100
+  payment          = calc_loan_payment(amount, monthly_rate, duration_months)
+  total_cost       = duration_months * payment
 
   processing(10)
-
   summary(amount, duration_months, payment, rate, total_cost)
-
-  prompt('loop?')
-  if gets.chomp == 'y'
-    prompt('new_loan')
-    sleep(1.5)
-    clear_screen
-  else
-    puts('')
-    prompt('goodbye')
+  unless get_calc_again?
     break
   end
 end
