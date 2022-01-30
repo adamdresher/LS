@@ -62,8 +62,9 @@ Array
   - PRINT target is not in the list
   
 - END
-=end
 
+**Code**:
+=end
 ORDINALS = ['1st', '2nd', '3rd', '4th', '5th', 'last']
 
 def prompt(message)
