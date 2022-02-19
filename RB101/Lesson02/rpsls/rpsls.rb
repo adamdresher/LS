@@ -53,7 +53,6 @@ def greetings
 end
 
 def check_name(input)
-  # if %w(spock Spock sp Sp).include?(input)
   if %w(spock spoc spo sp).any?(input.downcase)
     'Spock'
   else
