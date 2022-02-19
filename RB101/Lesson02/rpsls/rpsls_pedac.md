@@ -50,9 +50,9 @@ rock crushes scissors
 **Mental Model:**
 - Update `rps.rb` to include all winning options with `lizard` and `Spock` by updating the choices and list of all winning options (including the active verb for each scenario).
 
-Update the input validation method to also match the choices' first character's index (first two characters for `Spock` and `scissors`).
+- Update the input validation method to also match the choices' first character's index (first two characters for `Spock` and `scissors`).
 
-Add an initial message that states the game is best 2 out of 3.
+- Add an initial message that states the game is best 2 out of 3.
 Add a win counter hash  at the beginning of the main loop (a key-value for user and one for computer).  After each match, add a point to the winner.  When user or computer reach `3`, declare a winner of the game and ask if the user wants to play again.
 ---
 
@@ -61,35 +61,12 @@ Examples / Test Cases / Edge Cases
 
 **Examples:**
 
--  Example 1
-  -  Inputs:
-  -  Output:
--  Example 2
-  -  Inputs:
-  -  Output:
-
----
-
-_Your Test Cases:_
-
--  Example 3
-  -  Inputs:
-  -  Output:
-
----
-
-_Your Edge Cases:_
-
--  Example 4
-  -  Inputs:
-  -  Output:
-
 ---
 
 Data Structure
 --------------
 YAML
-Hash
+Hash/Array
 
 ---
 
