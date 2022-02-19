@@ -3,6 +3,7 @@ divider:          "-----------------------------------------------------------"
 game_rules:       "The first one to win 3 matches will win the game."
 instructions?:    'Would you want to read instructions?'
 instructions:     "This game uses the same rules as Rock, Paper, Scissors.  The difference is that there are added choices ('Lizard' and 'Spock') and more winning options:\n\n"
+continue:         "Press 'Enter' to continue."
 begin:            "Let's begin!\n"
 user_match:       "You won this match!"
 computers_match:  "Computer won this match!"
