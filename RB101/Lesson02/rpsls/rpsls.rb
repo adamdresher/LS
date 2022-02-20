@@ -24,8 +24,12 @@ def prompt_alt(message)
   puts("==> #{message}")
 end
 
+def empty_line
+  puts()
+end
+
 def continue
-  puts("\n\n")
+  2.times { empty_line }
   prompt('continue')
   gets()
 end
@@ -34,20 +38,24 @@ def clear_screen
   system('clear')
 end
 
-def greetings
-  puts()
-  prompt('hi')
-  prompt('divider')
-  puts()
-  prompt('game_rules')
+def display_instructions?
   prompt('instructions?')
   if gets.chomp.downcase.start_with?('y')
-    puts()
+    empty_line
     prompt('instructions')
     RPSLS.each { |string| prompt_alt(string.join(' ') + ('.')) }
     continue
   end
-  puts()
+end
+
+def greetings
+  empty_line
+  prompt('hi')
+  prompt('divider')
+  empty_line
+  prompt('game_rules')
+  display_instructions?
+  empty_line
   prompt('begin')
   sleep(0.7)
 end
@@ -58,6 +66,32 @@ def check_name(input)
   else
     input.downcase
   end
+end
+
+def user_input
+  input = nil
+  loop do
+    prompt_alt("Choose one: #{VALID_CHOICES.join(', ')}")
+    input = check_name(gets.chomp)
+
+    if input == ''
+      prompt('invalid')
+    elsif VALID_CHOICES.any? { |choice| choice.start_with?(choice) }
+      input == 's' ? prompt('spock') : break
+    else
+      prompt('invalid')
+    end
+  end
+  input
+end
+
+def complete_word!(user_choice)
+  RPSLS.each do |phrase|
+    if check_name(phrase[0]).start_with?(user_choice)
+      user_choice.replace(check_name(phrase[0]))
+    end
+  end
+  user_choice
 end
 
 def match?(first, second)
@@ -79,19 +113,48 @@ def display_match(user, computer)
   match.join(' ').insert(-1, '.')
 end
 
-def display_winner(user, computer)
+def display_match_winner(user, computer)
+  empty_line
+  prompt_alt("You chose: #{user}")
+  prompt_alt("Computer chose: #{computer}\n\n")
+
   if match?(user, computer)
     prompt_alt(display_match(user, computer))
-    prompt('user_match')
+    prompt('users_match')
   elsif match?(computer, user)
     prompt_alt(display_match(computer, user))
     prompt('computers_match')
   else
     prompt('tie_match')
   end
+  empty_line
 end
 
-def play_game
+def grand_winner?(user, computer)
+  if user >= 3
+    'user'
+  elsif computer >= 3
+    'computer'
+  else
+    continue
+    false
+  end
+end
+
+def display_grand_winner(player)
+  if player
+    continue
+    clear_screen
+    10.times { empty_line }
+    prompt("#{player}_grand_win")
+  end
+end
+
+# Program begins:
+
+greetings
+
+loop do
   match = 0
   user = 0
   computer = 0
@@ -102,66 +165,22 @@ def play_game
     prompt_alt("Match # #{match}  -  User: #{user}  /  Computer: #{computer}")
     prompt('divider')
 
-    user_choice = ''
-    loop do
-      prompt_alt("Choose one: #{VALID_CHOICES.join(', ')}")
-      user_choice = check_name(gets.chomp)
-
-      if user_choice == ''
-        prompt('invalid')
-      elsif VALID_CHOICES.any? { |choice| choice.start_with?(user_choice) }
-        user_choice == 's' ? prompt('spock') : break
-      else
-        prompt('invalid')
-      end
-    end
-
+    user_choice = complete_word!(user_input)
     computer_choice = check_name(VALID_CHOICES.sample)
 
-    puts()
-    user_choice_completed = ''
-    RPSLS.each do |phrase|
-      if check_name(phrase[0]).start_with?(user_choice)
-        user_choice_completed = check_name(phrase[0])
-      end
-    end
-
-    prompt_alt("You chose: #{user_choice_completed}")
-    prompt_alt("Computer chose: #{computer_choice}\n\n")
-    display_winner(user_choice, computer_choice)
-    puts()
+    display_match_winner(user_choice, computer_choice)
 
     if match?(user_choice, computer_choice) then user     += 1 end
     if match?(computer_choice, user_choice) then computer += 1 end
-
     prompt_alt("The score is now:\n    user:  #{user}\
     computer:  #{computer}")
-    winner = nil
-    if user == 3
-      winner = 'user'
-    elsif computer == 3
-      winner = 'computer'
-    else
-      continue
-    end
-    
-    
+
+    winner = grand_winner?(user, computer)
     if winner
-      sleep(1.5)
-      clear_screen
-      10.times { puts() }
-      prompt("#{winner}_win")
+      display_grand_winner(winner)
       break
     end
   end
-end
-
-# Program begins:
-
-greetings
-
-loop do
-  play_game
 
   prompt('replay?')
   replay = gets.chomp
