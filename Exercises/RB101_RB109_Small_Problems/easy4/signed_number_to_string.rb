@@ -33,10 +33,10 @@ end
 
 
 # SOLUTION.  FURTHER EXPLORATION.
-def signed_integer_to_string(number)
-  string = integer_to_string(number.abs)
+def signed_integer_to_string(integer)
+  string = integer_to_string(integer.abs)
 
-  case number <=> 0
+  case integer <=> 0
   when  1 then "+#{string}"
   when -1 then "-#{string}"
   else             string
