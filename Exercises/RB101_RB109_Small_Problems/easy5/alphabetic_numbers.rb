@@ -9,12 +9,12 @@
 #   ['eighteen', 18], ['nineteen', 19]
 # ].freeze
 
-def alphabetic_number_sort(arr)
-  sorted_num =
-    NUM_SPELLING.select { |ele| ele if arr.include?(ele[1]) }
-                .sort
-                .map { |ele| ele[1] }
-end
+# def alphabetic_number_sort(arr)
+#   sorted_num =
+#     NUM_SPELLING.select { |ele| ele if arr.include?(ele[1]) }
+
+#   sorted_num.sort.map { |ele| ele[1] }
+# end
 
 # Solution 2.
 # frozen_string_literal: true
