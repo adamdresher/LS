@@ -50,16 +50,3 @@ def print_in_box(string)
   puts buffer_line
   puts horizontal_line
 end
-
-print_in_box('To boldly go where no one has gone before. Whubba lub dub dub '\
-  'the cat and the hat the cow jumped over the moon whoopdie doo! Lorem ipsum '\
-  'dolor sit amet, consectetur adipiscing elit. Pellentesque rutrum dolor erat, '\
-  'vel egestas tellus mollis ut. Donec vulputate, felis vitae lobortis fringilla, '\
-  'ex ligula tempor diam, sed posuere lorem dui ac sapien. Vestibulum at '\
-  'condimentum lectus. Vivamus imperdiet sapien ligula, at faucibus felis aliquam '\
-  'et. Aliquam vitae mollis dui. Nam sit amet vulputate risus, ac sagittis ligula. '\
-  'Maecenas ut mi bibendum, placerat dui sit amet, pharetra enim. Proin scelerisque '\
-  'non sem lobortis convallis. Praesent non diam in nisi sagittis sagittis. Mauris '\
-  'cursus felis nec lorem ornare volutpat. Donec id turpis neque. Nullam nunc arcu, '\
-  'eleifend a maximus sed, vulputate id purus. Praesent eu mauris lacus. Mauris a '\
-  'ornare lectus')
