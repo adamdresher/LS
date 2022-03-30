@@ -5,22 +5,15 @@ def split_angle(dividend)
   [quotient, remainder]
 end
 
-def format_num(integer)
-  format("%02d", integer)
-end
-
-def dms(angle)
-  num_degree, num_min = split_angle(angle)
-  num_min *= 60
-  num_min, num_sec = split_angle(num_min)
-  num_sec *= 60
-  if num_sec.round(half: :up) == 60
-    num_min += 1
-    num_sec = 0
+def dms(float_angle)
+  degrees, minutes = split_angle(float_angle % 360)
+  minutes *= 60
+  minutes, seconds = split_angle(minutes)
+  seconds *= 60
+  if seconds.round(half: :up) == 60
+    minutes += 1
+    seconds = 0
   end
 
-  num_min = format_num(num_min)
-  num_sec = format_num(num_sec)
-
-  "#{num_degree}#{DEGREE}#{num_min}'#{num_sec}\""
+  format(%(%d#{DEGREE}%02d'%02d"), degrees, minutes, seconds)
 end
