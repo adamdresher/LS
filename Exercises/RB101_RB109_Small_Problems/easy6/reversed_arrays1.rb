@@ -16,5 +16,4 @@ def reverse!(list)
   list.map!.with_index { |ele, i| [ele, list.size - i] }
       .sort! { |a, b| a[1] <=> b[1] }
       .map! { |ele| ele[0] }
-  list
 end
