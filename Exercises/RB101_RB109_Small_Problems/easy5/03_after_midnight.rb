@@ -1,3 +1,5 @@
+#frozen_string_literal: true
+
 # MIN_IN_DAY = 1440 # 60 min/hr * 24 hrs/day
 
 # def after_midnight(time)
@@ -14,26 +16,24 @@
 #   result == 0 ? 0 : (1440 - result) # checks and returns if `time` is `0`, else inverts time
 # end
 
-
 # Solution.  Refactored to be more readable.
-MIN_IN_DAY = 1440 # 60 min/hr * 24 hrs/day
+# MIN_IN_DAY = 1440 # 60 min/hr * 24 hrs/day
 
-def after_midnight(time)
-  hrs = time[0..1].to_i # extracts hours
-  min = time[-2..-1].to_i # extracts minutes
-  result = (hrs * 60) + min # converts `time` to minutes
+# def after_midnight(time)
+#   hrs = time[0..1].to_i # extracts hours
+#   min = time[-2..-1].to_i # extracts minutes
+#   result = (hrs * 60) + min # converts `time` to minutes
 
-  return 0 if result == MIN_IN_DAY
-  result
-end
+#   return 0 if result == MIN_IN_DAY
+#   result
+# end
 
-def before_midnight(time)
-  result = after_midnight(time) # converts `time` to minutes
+# def before_midnight(time)
+#   result = after_midnight(time) # converts `time` to minutes
 
-  return result if result == 0
-  1440 - result
-end
-
+#   return result if result == 0
+#   1440 - result
+# end
 
 # Solution.  Alternative.
 # def after_midnight(time)
@@ -50,7 +50,6 @@ end
 #   minutes = after_midnight(time)
 #   minutes == 0 ? 0 : (1440 - minutes)
 # end
-
 
 # Solution.  Further Exploration.
 require 'Time'

@@ -1,21 +1,23 @@
-def print_in_box(string)
-  str_width = string.length
-  box = [
-  '+--+',
-  '|  |',
-  '|  |',
-  '|  |',
-  '+--+'
-]
+# frozen_string_literal: true
 
-box[0].insert(2, ('-' * str_width))
-box[1].insert(2, (' ' * str_width))
-box[2].insert(2, string)
-box[3].insert(2, (' ' * str_width))
-box[4].insert(2, ('-' * str_width))
+# def print_in_box(string)
+#   str_width = string.length
+#   box = [
+#   '+--+',
+#   '|  |',
+#   '|  |',
+#   '|  |',
+#   '+--+'
+# ]
 
-puts box
-end
+# box[0].insert(2, ('-' * str_width))
+# box[1].insert(2, (' ' * str_width))
+# box[2].insert(2, string)
+# box[3].insert(2, (' ' * str_width))
+# box[4].insert(2, ('-' * str_width))
+
+# puts box
+# end
 
 # Solution 2.  Further Exploration.
 LENGTH_MAX = 76
@@ -50,3 +52,17 @@ def print_in_box(string)
   puts buffer_line
   puts horizontal_line
 end
+
+p print_in_box('To boldly go where no one has gone before.')
+# +--------------------------------------------+
+# |                                            |
+# | To boldly go where no one has gone before. |
+# |                                            |
+# +--------------------------------------------+
+
+p print_in_box('')
+# +--+
+# |  |
+# |  |
+# |  |
+# +--+

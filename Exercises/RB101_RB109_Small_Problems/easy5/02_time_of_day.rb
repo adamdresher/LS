@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 # def inverse_time(hrs, min) # formats time for the past (negative `time` argument)
 #   unless min == 0 # cycles back `min` and `hrs` by `min` minutes.
 #     min = 60 - min
@@ -36,3 +38,11 @@ def time_of_day(time)
 
   format("%02d:%02d",hrs, min)
 end
+
+p time_of_day(0) == "00:00"
+p time_of_day(-3) == "23:57"
+p time_of_day(35) == "00:35"
+p time_of_day(-1437) == "00:03"
+p time_of_day(3000) == "02:00"
+p time_of_day(800) == "13:20"
+p time_of_day(-4231) == "01:29"

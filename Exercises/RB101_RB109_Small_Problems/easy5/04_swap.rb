@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 # def swap(string)
 #   string.split.map do |word|
 #     if word.size == 1
@@ -11,8 +13,7 @@
 #   end.join(' ')
 # end
 
-
-# Solution.  Alternative.
+# Solution 2.
 def swap(string)
   string.split.map do |word|
     char1 = word[0]
@@ -25,3 +26,7 @@ def swap(string)
     end
   end.join(' ')
 end
+
+p swap('Oh what a wonderful day it is') == 'hO thaw a londerfuw yad ti si'
+p swap('Abcde') == 'ebcdA'
+p swap('a') == 'a'

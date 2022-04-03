@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 # A_Z = ('a'..'z')
 
 # def cleanup(string)
@@ -19,7 +21,7 @@
 #   new_string
 # end
 
-# Solution.  Alternative.
+# Solution 2.
 def cleanup(string)
   new_string = []
 
@@ -30,10 +32,9 @@ def cleanup(string)
   new_string.join.gsub(/ +/, ' ')
 end
 
-
-# Soltuion.  Alternative.
+# Soltuion 3.
 # def cleanup(string)
 #   string.gsub(non-alphabetic char, ' ')
 # end
 
-p cleanup("---what's my +*& line?") # == ' what s my line '
+p cleanup("---what's my +*& line?") == ' what s my line '

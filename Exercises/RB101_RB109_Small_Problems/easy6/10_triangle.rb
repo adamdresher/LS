@@ -49,3 +49,11 @@ What corner would you like to display the triangle's right angle?
   puts "\n"
   print_triangle(length, corner)
 end
+
+p triangle(5)
+
+#     *
+#    **
+#   ***
+#  ****
+# *****
