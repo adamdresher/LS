@@ -9,7 +9,7 @@
 #     combined_arr << arr2[counter]
 #     counter += 1
 #   end
-  
+
 #   return combined_arr
 # end
 
