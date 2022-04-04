@@ -20,20 +20,24 @@ def string_to_integer(string)
   number
 end
 
-def string_to_signed_integer(string)
-  neg_sign = string.start_with?('-')
-  signed_integer = string
+# def string_to_signed_integer(string)
+#   neg_sign = string.start_with?('-')
+#   signed_integer = string
 
-  signed_integer.slice!(0) if string.start_with?('-', '+')
-  signed_integer = string_to_integer(signed_integer)
+#   signed_integer.slice!(0) if string.start_with?('-', '+')
+#   signed_integer = string_to_integer(signed_integer)
 
-  neg_sign == true ? signed_integer * -1 : signed_integer
-end
+#   neg_sign == true ? signed_integer * -1 : signed_integer
+# end
 
-# SOLUTION.  FURTHER EXPLORATION.
+# Solution.  Further Exploration.
 def string_to_signed_integer_fe(string)
   sign = string.start_with?('-') ? -1 : 1
   number = string.start_with?('-', '+') ? string[1..-1] : string
 
   string_to_integer(number) * sign
 end
+
+p string_to_signed_integer('4321') == 4321
+p string_to_signed_integer('-570') == -570
+p string_to_signed_integer('+100') == 100

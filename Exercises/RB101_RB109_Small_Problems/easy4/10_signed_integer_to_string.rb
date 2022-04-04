@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 DIGITS = [
   [0, '0'], [1, '1'], [2, '2'], [3, '3'], [4, '4'],
   [5, '5'], [6, '6'], [7, '7'], [8, '8'], [9, '9']
@@ -31,8 +33,7 @@ def signed_integer_to_string(integer)
   end
 end
 
-
-# SOLUTION.  FURTHER EXPLORATION.
+# Solution.  Further Exploration.
 def signed_integer_to_string(integer)
   string = integer_to_string(integer.abs)
 
@@ -42,3 +43,7 @@ def signed_integer_to_string(integer)
   else             string
   end
 end
+
+p signed_integer_to_string(4321) == '+4321'
+p signed_integer_to_string(-123) == '-123'
+p signed_integer_to_string(0) == '0'
