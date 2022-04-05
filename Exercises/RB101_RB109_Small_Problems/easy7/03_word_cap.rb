@@ -11,9 +11,7 @@
 #   new_word = String.new
 
 #   word.chars.each do |letter|
-#     if !letter.match?(ALPHABET)
-#       new_word << letter
-#     elsif letter.match?(ALPHABET) && !new_word.match?(ALPHABET)
+#     if letter.match?(ALPHABET) && !new_word.match?(ALPHABET)
 #       new_word << letter.upcase
 #     else
 #       new_word << letter.downcase
@@ -53,9 +51,9 @@
 #       else
 #         letter.downcase
 #       end
-#     end.join('')
+#     end.join
 #   end.join(' ')
-end
+# end
 
 # Solution 4.
 def word_cap(string)

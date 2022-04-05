@@ -64,11 +64,9 @@ Array.
 - take a string argument
 - iterate over argument's letters and return a new string:
   - initialize a new, empty string
-  - unless letter is in constant variable
-    - new string << letter
-  - else if letter is in constant variable, but not in new string
+  - if letter is in constant variable, but no alphabetical character is in new string
     - new string << upcase letter
-  - else
+  - else # non_alphabetical characters return self
     - new string << downcase letter
 - return new string
 
