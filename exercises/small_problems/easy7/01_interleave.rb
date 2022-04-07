@@ -35,6 +35,7 @@
 
 # Solution 4.
 # frozen_string_literal: true
+
 def interleave(arr1, arr2)
   arr1.zip(arr2).flatten
 end

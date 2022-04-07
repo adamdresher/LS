@@ -39,7 +39,8 @@
 #   capitalized_words
 # end
 
-# This solution does not capitalize the first alphabetical character if it is preceded by a non-alphabetical character (which is not a whitespace).
+# This solution does not capitalize the first alphabetical character if it is /
+# preceded by a non-alphabetical character (which is not a whitespace).
 # Solution 3.
 # ALPHABET = /[A-z]/.freeze
 
