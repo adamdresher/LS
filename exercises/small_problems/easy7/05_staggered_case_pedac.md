@@ -42,6 +42,21 @@ Array.
 - join array
 - return new string
 
+**staggered_case** # Further Exploration.
+- take a string argument and a boolean argument
+- split the string argument into an array of characters
+- iterate through and mutate array's elements:
+  - initialize a variable, `start_upcase`, set to:
+    - if the boolean is true
+      - check if element's index is even
+    - else
+      - check if element's index is odd
+  - if start_upcase
+    - element.upcase
+  - else
+    - element.downcase
+- join array
+- return new string
 ---
 ### Code
 *see `05_staggered_case.rb`*

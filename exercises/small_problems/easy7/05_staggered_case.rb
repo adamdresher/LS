@@ -7,10 +7,11 @@
 # end
 
 # Solution 2.  Further Exploration.
-def staggered_case(string, start_upcase: true)
-  string.split('').map.with_index do |char, i|
-    i += 1 unless start_upcase
-    i.even? ? char.upcase : char.downcase
+def staggered_case(string, start_upcase = true)
+  string.chars.map.with_index do |char, i|
+    check_index = start_upcase ? i.even? : i.odd?
+
+    check_index ? char.upcase : char.downcase
   end.join
 end
 
