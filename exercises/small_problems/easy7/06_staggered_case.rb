@@ -38,29 +38,29 @@
 # Solution 3.  Further Exploration.
 def staggered_case(string, start_upcase = true, all_char = false)
   return_string = ''
-  set_upcase = start_upcase
 
-  string.each_char.with_index do |char, i|
+  string.each_char do |char|
     if !all_char && char.match(/[^A-z]/)
       return_string << char
     else
-      return_string << swap_case(char, set_upcase)
-      set_upcase = !set_upcase
+      return_string << swap_case(char, start_upcase)
+      start_upcase = !start_upcase
     end
   end
+
   return_string
 end
 
-def swap_case(string, set_upcase)
-  set_upcase ? string.upcase : string.downcase
+def swap_case(string, start_upcase)
+  start_upcase ? string.upcase : string.downcase
 end
 
 p staggered_case('I Love Launch School!') == 'I lOvE lAuNcH sChOoL!'
 p staggered_case('ALL CAPS') == 'AlL cApS'
 p staggered_case('ignore 77 the 444 numbers') == 'IgNoRe 77 ThE 444 nUmBeRs'
 # Further Exploration.
-p test = '!!!!I\'m testing "non-alpha chars and the first char.'
-p staggered_case(test, true, true)
-p staggered_case(test, true, false)
-p staggered_case(test, false, true)
-p staggered_case(test, false, false)
+test = '!!!!I\'m testing "non-alpha" chars and the first char.'
+p staggered_case(test, true, true) == "!!!!I'M TeStInG \"nOn-aLpHa\" ChArS AnD ThE FiRsT ChAr."
+p staggered_case(test, true, false) == "!!!!I'm TeStInG \"nOn-AlPhA\" cHaRs AnD tHe FiRsT cHaR."
+p staggered_case(test, false, true) == "!!!!i'm tEsTiNg \"NoN-AlPhA\" cHaRs aNd tHe fIrSt cHaR."
+p staggered_case(test, false, false) == "!!!!i'M tEsTiNg \"NoN-aLpHa\" ChArS aNd ThE fIrSt ChAr."
