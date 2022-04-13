@@ -1,4 +1,6 @@
-`=> [4, 5, 3, 6]`
+```ruby
+=> [4, 5, 3, 6]
+```
 
 - First, unbound parameters from left to right take precedent when assigning arguments.
 - Next, parameters with default values from left to right take precedent.
