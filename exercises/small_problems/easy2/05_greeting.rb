@@ -23,4 +23,4 @@ def hello
   end
 end
 
-p hello
+hello

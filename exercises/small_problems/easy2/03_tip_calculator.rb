@@ -27,4 +27,4 @@ def tip_calculator
   puts "The total is #{bill_total}"
 end
 
-p tip_calculator
+tip_calculator

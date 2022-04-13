@@ -25,4 +25,4 @@ def area_of_room
   puts "The area of the room is #{area_ft} square feet (#{area_in} square inches & #{area_cm} square centimeters)."
 end
 
-p area_of_room
+area_of_room

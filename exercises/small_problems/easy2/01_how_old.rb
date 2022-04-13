@@ -31,4 +31,4 @@ def teddy
   puts "#{name} is #{age} years old!"
 end
 
-p teddy
+teddy

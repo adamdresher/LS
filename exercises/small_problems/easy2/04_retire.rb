@@ -32,4 +32,4 @@ def retirement
   puts "You have only #{countdown} years of work to go!"
 end
 
-p retirement
+retirement
