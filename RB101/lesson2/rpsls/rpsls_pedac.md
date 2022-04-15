@@ -1,77 +1,60 @@
 RPSLS
 ==============
 
-(Understand the) Problem
-------------------------
+### Understanding the Problem
 1. This game is a variation on the Rock Paper Scissors game that adds two more options - Lizard and Spock.
 
-Rules of the game:
-scissors cuts paper
-paper covers rock
-rock crushes lizard
-lizard poisons Spock
-Spock smashes scissors
-scissors decapitates lizard
-lizard eats paper
-paper disproves Spock
-Spock vaporizes rock
-rock crushes scissors
+        Rules of the game:
+
+        - scissors cuts paper
+        - paper covers rock
+        - rock crushes lizard
+        - lizard poisons Spock
+        - Spock smashes scissors
+        - scissors decapitates lizard
+        - lizard eats paper
+        - paper disproves Spock
+        - Spock vaporizes rock
+        - rock crushes scissors
 
 2. Typing the full word "rock" or "lizard" is tiring. Update the program so the user can type "r" for "rock," "p" for "paper," etc. Note that if you do bonus #1, you'll have two words that start with "s." How do you resolve that?
 
 3. Keep score of the player's and computer's wins. When either the player or computer reaches three wins, the match is over, and the winning player becomes the grand winner. Don't add your incrementing logic to display_results. Keep your methods simple; they should perform one logical task — no more, no less.
 
--  Inputs:
-	- 
+**Explicit Requirements:**
 
--  Output:
-	- 
+- Input: User input.
+- Output: Strings.
 
----
+**Implicit requirements:**
 
-**Problem Domain:**
-- 
-
----
-
-**Implicit Requirements:**
-- 
-
----
-
-**Clarifying Questions:**
-1. What happens when the user inputs `ro` for `rock`?
+- What happens when the user inputs `ro` for `rock`?
     - Accept input if the sequence matches a sequence of a valid option.
-2. What happens when the user inputs `s` for `Spock`, not `scissors?`
+- What happens when the user inputs `s` for `Spock`, not `scissors?`
     - Require `sp` for `Spock` and `sc` for `scissors`.
 
----
-
 **Mental Model:**
+
 - Update `rps.rb` to include all winning options with `lizard` and `Spock` by updating the choices and list of all winning options (including the active verb for each scenario).
 
 - Update the input validation method to also match the choices' first character's index (first two characters for `Spock` and `scissors`).
 
 - Add an initial message that states the game is best 2 out of 3.
 Add a win counter hash  at the beginning of the main loop (a key-value for user and one for computer).  After each match, add a point to the winner.  When user or computer reach `3`, declare a winner of the game and ask if the user wants to play again.
----
-
-Examples / Test Cases / Edge Cases
-----------------------------------
-
-**Examples:**
 
 ---
+### Examples/Tests
+```ruby
 
-Data Structure
---------------
-YAML
-Hash/Array
+```
+---
+### Data Structures
+- YAML
+- Hash
+- Array
 
 ---
-
-Algorithm
----------
+### Algorithm
 - START
 
   - SET yaml for messages
@@ -158,6 +141,5 @@ Algorithm
 
 - END
 ---
-
-Code
-----
+### Code
+*see `rpsls.rb`*

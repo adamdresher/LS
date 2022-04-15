@@ -20,20 +20,6 @@ def display_results(player, computer)
   end
 end
 
-# def display_results(player, computer)
-#   if    (player == 'rock' && computer == 'scissors') ||
-#         (player == 'paper' && computer == 'rock') ||
-#         (player == 'scissors' && computer == 'paper')
-#     prompt("You won!")
-#   elsif (player == 'rock' && computer == 'rock') ||
-#         (player == 'paper' && computer == 'paper') ||
-#         (player == 'scissors' && computer == 'scissors')
-#     prompt("It's a tie!")
-#   else
-#     prompt("Computer won!")
-#   end
-# end
-
 loop do
   choice = ''
   loop do
@@ -61,9 +47,3 @@ loop do
 end
 
 prompt("Thank you for playing.  Goodbye!")
-
-# rubocop raises cops for ABC complexity.
-# http://wiki.c2.com/?AbcMetric
-# https://en.wikipedia.org/wiki/ABC_Software_Metric
-# ABC = <5, 7, 14>
-# Is an else statement considered having a condition?

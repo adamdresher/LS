@@ -1,5 +1,3 @@
-# Program defined:
-
 require 'yaml'
 MESSAGES = YAML.load_file('rpsls.yml')
 
@@ -15,6 +13,8 @@ RPSLS = [["Scissors", "cuts", "paper"],
          ["Paper", "disproves", "Spock"],
          ["Spock", "vaporizes", "rock"],
          ["Rock", "crushes", "scissors"]]
+
+# Helper methods
 
 def prompt(message)
   puts("==> #{MESSAGES[message]}")
@@ -150,7 +150,7 @@ def display_grand_winner(player)
   end
 end
 
-# Program begins:
+# Program begins
 
 greetings
 
@@ -189,8 +189,3 @@ loop do
 end
 
 prompt('goodbye')
-
-# rubocop raises cops for ABC complexity.
-# http://wiki.c2.com/?AbcMetric
-# https://en.wikipedia.org/wiki/ABC_Software_Metric
-# ABC = <5, 7, 14>

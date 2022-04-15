@@ -1,4 +1,3 @@
-
 require 'yaml'
 MESSAGES = YAML.load_file('rb101_lesson02_calculator_messages.yml')
 LANGUAGE = 'english'

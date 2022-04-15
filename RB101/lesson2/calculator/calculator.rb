@@ -1,4 +1,3 @@
-# # SOLUTION 1.
 # puts "Hello, I'm your simple calculator and can perform the following operations:\n+  : addition\n-  : subtraction\n*  : multiplication\n/  : division\n** : square"
 
 # puts 'Give me the first number:'
@@ -20,13 +19,7 @@
 
 # puts "#{num1} #{operation} #{num2} = #{result}"
 
-
-# SOLUTION 2.
-# ask the user for two numbers
-# ask the user for an operation to perform
-# perform the operation on the two numbers
-# output the result
-
+# Solution 2.
 Kernel.puts("Welcome to Calculator!")
 
 Kernel.puts("What's the first number?")
