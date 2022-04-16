@@ -70,17 +70,17 @@ def rotate_object(object)
                  end
 end
 
-# p rotate_object([7, 3, 5, 2, 9, 1]) == [3, 5, 2, 9, 1, 7]
-# p rotate_object(['a', 'b', 'c']) == ['b', 'c', 'a']
-# p rotate_object(['a']) == ['a']
+p rotate_object([7, 3, 5, 2, 9, 1]) == [3, 5, 2, 9, 1, 7]
+p rotate_object(['a', 'b', 'c']) == ['b', 'c', 'a']
+p rotate_object(['a']) == ['a']
 # Further Exploration
-# p rotate_object([]) == []
-# p rotate_object('abcde') == "bcdea"
-# p rotate_object('') == ''
-# p rotate_object(12345) == 23451
-# p rotate_object({ a: [1, 2, 3], b: ['aardvark', 'bison', 'catapillar'], c: 'hello' }) == { b: ['aardvark', 'bison', 'catapillar'], c: 'hello', a: [1, 2, 3] }
+p rotate_object([]) == []
+p rotate_object('abcde') == "bcdea"
+p rotate_object('') == ''
+p rotate_object(12345) == 23451
+p rotate_object({ a: [1, 2, 3], b: ['aardvark', 'bison', 'catapillar'], c: 'hello' }) == { b: ['aardvark', 'bison', 'catapillar'], c: 'hello', a: [1, 2, 3] }
 p rotate_object({}) == {}
 
-# x = [1, 2, 3, 4]
-# p rotate_array(x) == [2, 3, 4, 1]   # => true
-# p x == [1, 2, 3, 4]                 # => true
+x = [1, 2, 3, 4]
+p rotate_array(x) == [2, 3, 4, 1]   # => true
+p x == [1, 2, 3, 4]                 # => true
