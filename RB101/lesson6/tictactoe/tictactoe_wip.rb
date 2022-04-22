@@ -8,8 +8,6 @@ WINNING_COMBOS = [[1, 2, 3], [4, 5, 6], [7, 8, 9], # rows
 BOARD_SPACE = "     |     |"
 BOARD_LINE = "-----+-----+-----"
 INITIAL_MARK = ' '
-# PLAYER_MARK = 'X'
-# COMPUTER_MARK = 'O'
 mark = {}
 
 def prompt(msg)
@@ -195,19 +193,20 @@ def add_match_point(brd, scr)
 end
 
 # gameplay
-loop do # play again?
+
+loop do # main loop
   score = initialize_score
   welcome_player
 
   loop do # game set
     board = initialize_board
-    # binding.pry
-    current_marker = choose_who_starts
+    default_starter = choose_who_starts
     mark[:player] = choose_mark
     mark[:computer] = other_mark(mark[:player])
 
     loop do # game match
       # binding.pry
+      current_marker = default_starter
       display_board(board, score)
       play_piece!(board, current_marker)
       current_marker = alternate_marker(current_marker)
