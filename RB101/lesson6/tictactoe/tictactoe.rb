@@ -5,12 +5,10 @@ WINNING_COMBOS = [[1, 2, 3], [4, 5, 6], [7, 8, 9], # rows
                   [1, 4, 7], [2, 5, 8], [3, 6, 9], # columns
                   [1, 5, 9], [3, 5, 7]] # diagonals
 
-INITIAL_MARK = ' '
-PLAYER_MARK = 'X'
-COMPUTER_MARK = 'O'
 BOARD_SPACE = "     |     |"
 BOARD_LINE = "-----+-----+-----"
-
+INITIAL_MARK = ' '
+mark = {}
 
 def prompt(msg)
   puts "=> #{msg}"
@@ -37,9 +35,9 @@ def initialize_score
 end
 
 # rubocop:disable Metrics/AbcSize
-def display_board(brd, scr)
+def display_board(brd, scr, mark)
   clear_screen
-  puts "You're a #{PLAYER_MARK}.         Computer is #{COMPUTER_MARK}."
+  puts "You're a #{mark[:player]}.         Computer is #{mark[:computer]}."
   puts "Player has won: #{scr[:player]}.  Computer has won: #{scr[:computer]}."
   new_line
   puts BOARD_SPACE
@@ -59,28 +57,51 @@ end
 
 def welcome_player
   clear_screen
-  4.times { new_line }
-  prompt "Welcome to Tic tac toe!\
-  The first one to win 5 matches will win the game, good luck!"
-  new_line
+  6.times { new_line }
+  puts ' ' * 14 + "Welcome to Tic Tac Toe!"
+  2.times { screen_pause }
+  clear_screen
+
+  6.times { new_line }
+  puts ' ' * 4 + "The first one to win 5 matches will win the game, good luck!"
+  2.times { screen_pause }
 end
 
 def choose_who_starts
   loop do
+  clear_screen
     prompt "Choose who starts the game, player (1) or computer (2):"
-    first = gets.chomp.to_i
+    order_choice = gets.chomp.to_i
 
-    order = first == 1 ? :player : :computer
-    return order if first == 1 || 2
+    first = order_choice == 1 ? :player : :computer
+    return first if order_choice == 1 || order_choice == 2
+
     prompt "Sorry, that's an invalid entry.  Please try again."
   end
 end
 
-def play_piece!(brd, marker)
+def choose_mark
+  loop do
+  clear_screen
+    prompt "Would you like to be 'X' or 'O'?"
+    mark = gets.chomp.upcase
+
+    return mark if mark == 'X' || mark == 'O'
+    prompt "Sorry, that's an invalid entry.  Please try again."
+  end
+end
+
+def other_mark(chosen_mark)
+  mark_options = ['X', 'O']
+  mark_options.delete(chosen_mark)
+  mark_options[0]
+end
+
+def play_piece!(brd, marker, mark)
   if marker == :player
-    player_places_piece!(brd)
+    player_places_piece!(brd, mark)
   else
-    computer_places_piece!(brd)
+    computer_places_piece!(brd, marker, mark)
   end
 end
 
@@ -88,11 +109,11 @@ def alternate_marker(marker)
   marker == :player ? :computer : :player
 end
 
-def player_places_piece!(brd)
+def player_places_piece!(brd, mark)
   loop do
     prompt "Choose a position to place a piece: #{joinor(empty_squares(brd))}:"
     square = gets.chomp.to_i
-    return brd[square] = PLAYER_MARK if empty_squares(brd).include? square
+    return brd[square] = mark[:player] if empty_squares(brd).include? square
 
     prompt "Sorry, #{square} is an invalid square."
   end
@@ -108,23 +129,27 @@ def joinor(arr)
   end
 end
 
-def computer_places_piece!(brd)
+def computer_places_piece!(brd, marker, mark)
   square = case
-           when !find_at_risk_square(brd, COMPUTER_MARK) &&
-                !find_at_risk_square(brd, PLAYER_MARK)   &&
-                brd[5] == ' '                           then 5
-           when find_at_risk_square(brd, COMPUTER_MARK) then ai_move(brd, COMPUTER_MARK)
-           when find_at_risk_square(brd, PLAYER_MARK)   then ai_move(brd, PLAYER_MARK)
-           else                                              random_move(brd)
+           when !find_at_risk_square(brd, :computer, mark[:computer]) &&
+                !find_at_risk_square(brd, :player, mark[:player])   &&
+                brd[5] == ' '
+            5
+           when find_at_risk_square(brd, :computer, mark[:computer])
+            ai_move(brd, :computer, mark[:computer])
+           when find_at_risk_square(brd, :player, mark[:player])
+            ai_move(brd, :player, mark[:player])
+           else
+            random_move(brd)
            end
 
-  brd[square] = COMPUTER_MARK
+  brd[square] = mark[:computer]
 end
 # rubocop:enable Lint/Syntax
 
-def find_at_risk_square(brd, marker)
+def find_at_risk_square(brd, marker, mark)
   WINNING_COMBOS.each do |line|
-    if brd.values_at(*line).count(marker) == 2 &&
+    if brd.values_at(*line).count(mark) == 2 &&
        brd.values_at(*line).include?(INITIAL_MARK)
       line.each { |mark| return mark if brd[mark] == ' ' }
     end
@@ -132,8 +157,8 @@ def find_at_risk_square(brd, marker)
   nil
 end
 
-def ai_move(brd, marker)
-  find_at_risk_square(brd, marker)
+def ai_move(brd, marker, mark)
+  find_at_risk_square(brd, marker, mark)
 end
 
 def empty_squares(brd)
@@ -148,14 +173,15 @@ def board_full?(brd)
   empty_squares(brd).empty?
 end
 
-def someone_won?(brd, scr, lvl)
-  lvl == :match ? !!detect_match_winner(brd) : !!detect_set_winner(scr)
+def someone_won?(brd, scr, mark, lvl)
+  lvl ==
+    :match ? !!detect_match_winner(brd, mark) : !!detect_set_winner(scr)
 end
 
-def detect_match_winner(brd)
+def detect_match_winner(brd, mark)
   WINNING_COMBOS.each do |line|
-    return 'Player' if line.all? { |mark| brd[mark] == PLAYER_MARK }
-    return 'Computer' if line.all? { |mark| brd[mark] == COMPUTER_MARK }
+    return 'Player' if line.all? { |square| brd[square] == mark[:player] }
+    return 'Computer' if line.all? { |square| brd[square] == mark[:computer] }
   end
   nil
 end
@@ -166,32 +192,37 @@ def detect_set_winner(scr)
   nil
 end
 
-def add_match_point(brd, scr)
-  return scr[:player] += 1 if detect_match_winner(brd) == 'Player'
-  return scr[:computer] += 1 if detect_match_winner(brd) == 'Computer'
+def add_match_point(brd, scr, mark)
+  return scr[:player] += 1 if detect_match_winner(brd, mark) == 'Player'
+  return scr[:computer] += 1 if detect_match_winner(brd, mark) == 'Computer'
 end
 
 # gameplay
-loop do # play again?
+
+loop do # main loop
   score = initialize_score
   welcome_player
+  default_starter = choose_who_starts
+  mark[:player] = choose_mark
+  mark[:computer] = other_mark(mark[:player])
 
   loop do # game set
     board = initialize_board
-    current_marker = choose_who_starts
+    current_marker = default_starter
 
     loop do # game match
       # binding.pry
-      display_board(board, score)
-      play_piece!(board, current_marker)
+      display_board(board, score, mark)
+      play_piece!(board, current_marker, mark)
       current_marker = alternate_marker(current_marker)
-      break if someone_won?(board, score, :match) || board_full?(board)
+      display_board(board, score, mark) # shows winning move
+      break if someone_won?(board, score, mark, :match) || board_full?(board)
     end
 
-    if someone_won?(board, score, :match)
-      add_match_point(board, score)
+    if someone_won?(board, score, mark, :match)
+      add_match_point(board, score, mark)
 
-      prompt "#{detect_match_winner(board)} won the match!"
+      prompt "#{detect_match_winner(board, mark)} won the match!"
       new_line
       prompt "Score: Player - #{score[:player]}, Computer - #{score[:computer]}"
     else
@@ -199,7 +230,7 @@ loop do # play again?
     end
 
     screen_pause
-    break if someone_won?(board, score, :set)
+    break if someone_won?(board, score, mark, :set)
   end
 
   clear_screen
@@ -211,3 +242,5 @@ loop do # play again?
 end
 
 prompt "Thanks for playing Tic Tac Toe.  Goodbye!"
+2.times { screen_pause }
+clear_screen
