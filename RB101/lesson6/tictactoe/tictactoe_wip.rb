@@ -59,10 +59,15 @@ end
 
 def welcome_player
   clear_screen
-  4.times { new_line }
-  prompt "Welcome to Tic tac toe!\
-  The first one to win 5 matches will win the game, good luck!"
+  6.times { new_line }
+  prompt "Welcome to Tic tac toe!"
+  2.times { screen_pause}
+  clear_screen
+
+  6.times { new_line }
+  prompt "The first one to win 5 matches will win the game, good luck!"
   new_line
+  clear_screen
 end
 
 def choose_who_starts
@@ -71,10 +76,11 @@ def choose_who_starts
     order_choice = gets.chomp.to_i
 
     first = order_choice == 1 ? :player : :computer
-    # return first if order_choice == 1 || 2
-    return first if first
+    return first if order_choice == 1 || order_choice == 2
+
     prompt "Sorry, that's an invalid entry.  Please try again."
   end
+  clear_screen
 end
 
 def choose_mark
@@ -82,7 +88,7 @@ def choose_mark
     prompt "Would you like to be 'X' or 'O'?"
     mark = gets.chomp.upcase
 
-    return mark if mark == 'X' || 'O'
+    return mark if mark == 'X' || mark == 'O'
     prompt "Sorry, that's an invalid entry.  Please try again."
   end
 end
@@ -231,3 +237,5 @@ loop do # play again?
 end
 
 prompt "Thanks for playing Tic Tac Toe.  Goodbye!"
+2.times { clear_screen }
+clear_screen
