@@ -58,13 +58,13 @@ end
 def welcome_player
   clear_screen
   6.times { new_line }
-  prompt "Welcome to Tic tac toe!"
+  puts ' ' * 14 + "Welcome to Tic tac toe!"
   2.times { screen_pause}
   clear_screen
 
   6.times { new_line }
-  prompt "The first one to win 5 matches will win the game, good luck!"
-  new_line
+  puts ' ' * 4 + "The first one to win 5 matches will win the game, good luck!"
+  3.times { screen_pause}
   clear_screen
 end
 
