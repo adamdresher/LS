@@ -1,13 +1,13 @@
 ## README
 
-*This repository is dedicated to Launch School notes and project files.*
+*This repository contains exercises, notes, and programs from Launch School.*
 
 ### Table of Contents:
 
 - [Exercises](Exercises)
 - [RB101](RB101)
   - [Lesson 2](RB101/lesson2)
-    - ***Projects***
+    - ***Programs***
       - [Calculator](RB101/lesson2/calculator)
       - [Loan Calculator](RB101/lesson2/loan_calculator)
       - [Rock Paper Scissors Lizard Spock](RB101/lesson2/rpsls)
