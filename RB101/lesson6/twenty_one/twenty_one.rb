@@ -91,7 +91,6 @@ end
 loop do
   deck = CARD_NAMES * 4
   player_hand, dealer_hand = initialize_hand(deck)
-
   # binding.pry
   display_board(player_hand, dealer_hand)
   player_turn!(deck, player_hand, dealer_hand)
