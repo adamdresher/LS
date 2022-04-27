@@ -14,6 +14,10 @@ def new_line
   puts
 end
 
+def clear_screen
+  system 'clear'
+end
+
 def pause(time)
   sleep(time)
 end
@@ -22,7 +26,7 @@ def initialize_deck
   CARD_NAMES * 4
 end
 
-def draw_card(dck)
+def draw_card!(dck)
   dck.pop
 end
 
@@ -31,8 +35,8 @@ def initialize_hand(dck)
 
   2.times { dck.shuffle! }
   2.times do
-    player_hand << draw_card(dck)
-    dealer_hand << draw_card(dck)
+    player_hand << draw_card!(dck)
+    dealer_hand << draw_card!(dck)
   end
 
   [player_hand, dealer_hand]
@@ -45,7 +49,7 @@ def display_board(playr_hnd, dealr_hnd, reveal_dealr_crd=false)
   if reveal_dealr_crd
     prompt "Dealer has: #{joinor(dealr_hnd)} (#{determine_points(dealr_hnd)})"
   else
-    prompt "Dealer has: #{dealr_hnd[0]} and unknown card (#{determine_points(dealr_hnd)})"
+    prompt "Dealer has: #{dealr_hnd[0]} and an unknown card."
   end
 end
 
@@ -59,15 +63,21 @@ end
 def player_turn!(dck, playr_hnd, dealr_hnd)
   loop do
     break if someone_busts(playr_hnd)
+    clear_screen
 
-    display_board(playr_hnd, dealr_hnd, true) # set true for debugging
+    display_board(playr_hnd, dealr_hnd)
     new_line
+    prompt "Player's turn:"
     prompt "Would you like to draw or stay?"
     choice = gets[0].downcase
 
     if choice == 'd'
-      playr_hnd.push(draw_card(dck))
+      new_card = draw_card!(dck)
+      prompt "Player receives a #{new_card}."
+      playr_hnd << new_card
+      pause(0.5)
     elsif choice == 's'
+      pause(0.5)
       break
     end
   end
@@ -76,10 +86,23 @@ end
 def dealer_turn!(dck, playr_hnd, dealr_hnd)
   loop do
     break if someone_busts(dealr_hnd)
+    clear_screen
 
-    display_board(playr_hnd, dealr_hnd, true) # set true for debugging
+    display_board(playr_hnd, dealr_hnd, true)
     new_line
-    determine_points(dealr_hnd) < 17 ? dealr_hnd.push(draw_card(dck)) : break
+    prompt "Dealer's turn:"
+    if determine_points(dealr_hnd) < 17
+      prompt "Dealer chooses to draw."
+      pause(0.5)
+      new_line
+
+      new_card = draw_card!(dck)
+      prompt "Dealer receives a #{new_card}."
+      dealr_hnd << new_card
+    else
+      prompt "Dealer chooses to stay."
+      break
+    end
     pause(1)
   end  
 end
@@ -175,8 +198,7 @@ prompt "Okay, goodbye!"
 # - create dealer's turn # DONE
 # - add play again loop # DONE
 # - fix double display_winner after someone_busts # DONE
-# - consolidate player_turn and dealer_turn logic into one turn
-# - print "Player/Dealer draws #{a_card}."
-# - clear screen between player and dealer turns
+# - print "Player/Dealer draws #{a_card}." # DONE
+# - clear screen between player and dealer turns # DONE
 # - add greetings
 # - add option to display game rules
