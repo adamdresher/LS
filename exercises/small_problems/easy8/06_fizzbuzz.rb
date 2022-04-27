@@ -1,11 +1,11 @@
 def fizzbuzz(num1, num2)
   (num1..num2).each_with_object([]) do |num, arr|
     arr << case 0
-        when num % 3 && num % 5 then 'FizzBuzz'
-        when num % 3            then 'Fizz'
-        when num % 5            then 'Buzz'
-        else                          num.to_s
-        end
+           when num % 3 && num % 5 then 'FizzBuzz'
+           when num % 3            then 'Fizz'
+           when num % 5            then 'Buzz'
+           else                          num.to_s
+           end
   end.join ', '
 end
 
