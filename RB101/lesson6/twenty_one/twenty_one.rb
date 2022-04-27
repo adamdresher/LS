@@ -14,6 +14,10 @@ def new_line
   puts
 end
 
+def pause(time)
+  sleep(time)
+end
+
 def initialize_deck
   CARD_NAMES * 4
 end
@@ -55,6 +59,8 @@ end
 def player_turn!(dck, playr_hnd, dealr_hnd)
   loop do
     break if someone_busts(playr_hnd)
+
+    display_board(playr_hnd, dealr_hnd, true) # set true for debugging
     new_line
     prompt "Would you like to draw or stay?"
     choice = gets[0].downcase
@@ -64,13 +70,24 @@ def player_turn!(dck, playr_hnd, dealr_hnd)
     elsif choice == 's'
       break
     end
-
-    display_board(playr_hnd, dealr_hnd, true) # set true for debugging
   end
 end
 
-def dealer_turn!(dck, dealr_hnd)
+def dealer_turn!(dck, playr_hnd, dealr_hnd)
+  loop do
+    break if someone_busts(dealr_hnd)
+
+    display_board(playr_hnd, dealr_hnd, true) # set true for debugging
+    new_line
+    determine_points(dealr_hnd) < 17 ? dealr_hnd.push(draw_card(dck)) : break
+    pause(1)
+  end  
 end
+
+# 5. Dealer's turn:
+#   - show 'face down' card
+#   - dealer 'hit' if hand is < 16
+#   - repeat Step 4 until hand is >= 17
 
 def aces_go_last(hnd)
   hnd.each_with_object([]) do |card,new_hnd|
@@ -118,11 +135,10 @@ loop do
   deck = CARD_NAMES * 4
   player_hand, dealer_hand = initialize_hand(deck)
   # binding.pry
-  display_board(player_hand, dealer_hand, true) # set true for debugging
   player_turn!(deck, player_hand, dealer_hand)
   return display_winner(player_hand, dealer_hand) if someone_busts(player_hand)
 
-  dealer_turn!(deck, dealer_hand)
+  dealer_turn!(deck, player_hand, dealer_hand)
   return display_winner(player_hand, dealer_hand) if someone_busts(dealer_hand)
 
   display_winner(player_hand, dealer_hand)
@@ -153,4 +169,6 @@ end
 # - account for aces # DONE
 # - display message when someone busts # DONE
 # - display total score when someone wins # DONE
-# - create dealer's turn
+# - create dealer's turn # DONE
+# - fix double display_winner after someone_busts
+# - consolidate player_turn and dealer_turn logic into one turn
