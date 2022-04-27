@@ -80,14 +80,9 @@ def dealer_turn!(dck, playr_hnd, dealr_hnd)
     display_board(playr_hnd, dealr_hnd, true) # set true for debugging
     new_line
     determine_points(dealr_hnd) < 17 ? dealr_hnd.push(draw_card(dck)) : break
-    pause(1)
+    pause(2)
   end  
 end
-
-# 5. Dealer's turn:
-#   - show 'face down' card
-#   - dealer 'hit' if hand is < 16
-#   - repeat Step 4 until hand is >= 17
 
 def aces_go_last(hnd)
   hnd.each_with_object([]) do |card,new_hnd|
@@ -130,16 +125,20 @@ def display_winner(playr_hnd, dealr_hnd)
   prompt(winner)
 end
 
-# gameplay, start
+# main loop
 loop do
   deck = CARD_NAMES * 4
   player_hand, dealer_hand = initialize_hand(deck)
-  # binding.pry
-  player_turn!(deck, player_hand, dealer_hand)
-  return display_winner(player_hand, dealer_hand) if someone_busts(player_hand)
 
-  dealer_turn!(deck, player_hand, dealer_hand)
-  return display_winner(player_hand, dealer_hand) if someone_busts(dealer_hand)
+  # gameplay, start
+  loop do
+    player_turn!(deck, player_hand, dealer_hand)
+    break if someone_busts(player_hand)
+
+    dealer_turn!(deck, player_hand, dealer_hand)
+    break if someone_busts(dealer_hand)
+    break
+  end
 
   display_winner(player_hand, dealer_hand)
   break
@@ -170,5 +169,8 @@ end
 # - display message when someone busts # DONE
 # - display total score when someone wins # DONE
 # - create dealer's turn # DONE
+# - add 
 # - fix double display_winner after someone_busts
 # - consolidate player_turn and dealer_turn logic into one turn
+# - print "Player/Dealer draws #{a_card}."
+# - clear screen between player and dealer turns
