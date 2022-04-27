@@ -3,9 +3,15 @@ require 'pry-byebug'
 
 CARD_NAMES = %w(2 3 4 5 6 7 8 9 10 jack queen king ace)
 WORTH = {'2'=>[2], '3'=>[3], '4'=>[4], '5'=>[5], '6'=>[6], '7'=>[7], '8'=>[8], '9'=>[9], '10'=>[10], 'jack'=>[10], 'queen'=>[10], 'king'=>[10], 'ace'=>[1, 11]}
+PLAYER_WINS = ['Dealer busts, ', 'Player wins!']
+DEALER_WINS = ['Player busts, ', 'Dealer wins!']
 
 def prompt(msg)
   puts "=> #{msg}"
+end
+
+def new_line
+  puts
 end
 
 def initialize_deck
@@ -29,6 +35,7 @@ def initialize_hand(dck)
 end
 
 def display_board(playr_hnd, dealr_hnd, reveal_dealr_crd=false)
+  new_line
   prompt "You have: #{joinor(playr_hnd)} (#{determine_points(playr_hnd)})"
 
   if reveal_dealr_crd
@@ -48,6 +55,7 @@ end
 def player_turn!(dck, playr_hnd, dealr_hnd)
   loop do
     break if someone_busts(playr_hnd)
+    new_line
     prompt "Would you like to draw or stay?"
     choice = gets[0].downcase
 
@@ -87,7 +95,7 @@ end
 def determine_points_winner(playr_hnd, dealr_hnd)
   playr = determine_points(playr_hnd)
   dealr = determine_points(dealr_hnd)
-  playr > dealr ? 'Player wins!' : 'Dealer wins!'
+  playr > dealr ? PLAYER_WINS[1] : DEALER_WINS[1]
 end
 
 def someone_busts(hnd)
@@ -96,11 +104,12 @@ end
 
 def display_winner(playr_hnd, dealr_hnd)
   winner = case
-           when someone_busts(playr_hnd) then 'Dealer wins!'
-           when someone_busts(dealr_hnd) then 'Player wins!'
+           when someone_busts(playr_hnd) then DEALER_WINS.join
+           when someone_busts(dealr_hnd) then PLAYER_WINS.join
            else determine_points_winner(playr_hnd, dealr_hnd)
            end
   display_board(playr_hnd, dealr_hnd, true)
+  new_line
   prompt(winner)
 end
 
@@ -142,6 +151,6 @@ end
 
 # TODO
 # - account for aces # DONE
-# - display message when someone busts
-# - display total score when someone wins
+# - display message when someone busts # DONE
+# - display total score when someone wins # DONE
 # - create dealer's turn
