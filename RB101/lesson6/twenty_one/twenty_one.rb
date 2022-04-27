@@ -80,7 +80,7 @@ def dealer_turn!(dck, playr_hnd, dealr_hnd)
     display_board(playr_hnd, dealr_hnd, true) # set true for debugging
     new_line
     determine_points(dealr_hnd) < 17 ? dealr_hnd.push(draw_card(dck)) : break
-    pause(2)
+    pause(1)
   end  
 end
 
@@ -141,8 +141,13 @@ loop do
   end
 
   display_winner(player_hand, dealer_hand)
-  break
+  pause(2)
+  new_line
+  prompt "Do you want to play again? (yes or no)"
+  break unless gets.chomp.downcase.start_with?('y')
 end
+
+prompt "Okay, goodbye!"
 
 # Algorithm:
 # 1. Initialize a deck:
@@ -163,14 +168,15 @@ end
 #   - return to Step 1 if 'yes'
 #   - goodbye!
 
-
 # TODO
 # - account for aces # DONE
 # - display message when someone busts # DONE
 # - display total score when someone wins # DONE
 # - create dealer's turn # DONE
-# - add 
-# - fix double display_winner after someone_busts
+# - add play again loop # DONE
+# - fix double display_winner after someone_busts # DONE
 # - consolidate player_turn and dealer_turn logic into one turn
 # - print "Player/Dealer draws #{a_card}."
 # - clear screen between player and dealer turns
+# - add greetings
+# - add option to display game rules
