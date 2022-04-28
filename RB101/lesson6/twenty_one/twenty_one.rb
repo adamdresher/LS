@@ -276,6 +276,3 @@ loop do # main loop
 end
 
 prompt_yaml 'goodbye'
-
-# - Thank Seb for tip about regularly committing (it forces me to chunk work
-# and think in smaller steps)
