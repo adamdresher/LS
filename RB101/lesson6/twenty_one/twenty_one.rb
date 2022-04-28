@@ -1,16 +1,24 @@
+require 'yaml'
 require 'pry'
 require 'pry-byebug'
 
+MESSAGES = YAML.load_file('twenty_one_messages.yml')
 CARD_NAMES = %w(2 3 4 5 6 7 8 9 10 jack queen king ace)
 # suit isn't relevant to the game requirements, so it was ignored
 WORTH = { '2' => [2], '3' => [3], '4' => [4], '5' => [5], '6' => [6],
           '7' => [7], '8' => [8], '9' => [9], '10' => [10], 'jack' => [10],
           'queen' => [10], 'king' => [10], 'ace' => [1, 11] }
-PLAYER_WINS = ['Dealer busts, ', 'Player wins!'] # should use a YAML
-DEALER_WINS = ['Player busts, ', 'Dealer wins!']
 
 def prompt(msg)
   puts "=> #{msg}"
+end
+
+def prompt_yaml(msg)
+  puts "=> #{MESSAGES[msg]}"
+end
+
+def prompt_yaml_(msg)
+  puts "#{MESSAGES[msg]}"
 end
 
 def new_line(lines=1)
@@ -33,7 +41,7 @@ def draw_card!(dck)
   dck.pop
 end
 
-def initialize_hand(dck, total)
+def initialize_hand(total, dck)
   player_hand = []
   dealer_hand = []
 
@@ -52,27 +60,27 @@ end
 def display_greeting
   clear_screen
   new_line(6) # can create a YAML if there's time
-  puts "                          Welcome to Twenty-One!"
-  pause(1)
+  prompt_yaml_ 'welcome'
   new_line
-  puts "                                GAME RULES:"
-  puts "    The goal of the game is to reach as close to 21 without going over."
-  puts "                         (The dealer wins a tie =p)"
+  prompt_yaml_ 'rules0'
+  prompt_yaml_ 'rules1'
+  prompt_yaml_ 'rules2'
+  prompt_yaml_ 'rules3'
   new_line
-  puts "    You can (d)raw a card or (s)tay and let the dealer begin its turn."
+  prompt_yaml_ 'rules4'
   new_line(2)
-  puts "                 Press Enter when you are ready to begin."
-  gets.chomp
+  prompt_yaml_ 'rules5'
+  gets
 end
 
-def display_board(total, playr_hnd, dealr_hnd, reveal_dealr_crd=false)
+def display_board(ttl_mtch, total, playr_hnd, dealr_hnd, reveal_dealr_crd=false)
   new_line
-  prompt "You have: #{joinor(playr_hnd)} \
-(#{total[:player_points]} points)"
+  puts "   Match score: You - #{ttl_mtch['Player']}, Dealer - #{ttl_mtch['Dealer']}"
+  prompt_yaml_ 'line'
+  prompt "You have: #{joinor(playr_hnd)} (#{total[:player_points]} points)"
 
   if reveal_dealr_crd
-    prompt "Dealer has: #{joinor(dealr_hnd)} \
-(#{total[:dealer_points]} points)"
+    prompt "Dealer has: #{joinor(dealr_hnd)} (#{total[:dealer_points]} points)"
   else
     prompt "Dealer has: #{dealr_hnd[0]} and an unknown card"
   end
@@ -88,57 +96,57 @@ end
 
 # rubocop: disable Metrics/MethodLength, Metrics/AbcSize
 # offenses are due to string outputs
-def choose_turn(total, playr_hnd, dealr_hnd)
+def choose_turn(ttl_mtch, total, playr_hnd, dealr_hnd)
   choice = nil
   loop do
     clear_screen
-    display_board(total, playr_hnd, dealr_hnd)
+    display_board(ttl_mtch, total, playr_hnd, dealr_hnd)
     new_line
 
-    prompt "Player's turn:"
-    prompt "Would you like to (d)raw or (s)tay?"
+    prompt_yaml 'player_turn'
+    prompt_yaml 'draw_or_stay'
     choice = gets[0].downcase
     break if ['s', 'd'].include? choice
-    prompt "Sorry, please enter 'd' for draw or 's' for stay."
+    prompt_yaml 'draw_or_stay_validation'
     pause(1)
   end
   choice
 end
 
-def player_draws(dck, total, playr_hnd)
+def player_draws(total, dck, playr_hnd)
   new_card = draw_card!(dck)
   prompt "Player receives a #{new_card}."
   playr_hnd << new_card
   update_points!(playr_hnd, total, :player_points)
 end
 
-def player_turn!(dck, total, playr_hnd, dealr_hnd)
+def player_turn!(ttl_mtch, total, dck, playr_hnd, dealr_hnd)
   loop do
     break if someone_busts?(total[:player_points])
-    choice = choose_turn(total, playr_hnd, dealr_hnd)
+    choice = choose_turn(ttl_mtch, total, playr_hnd, dealr_hnd)
 
     if choice == 'd'
-      player_draws(dck, total, playr_hnd)
+      player_draws(total, dck, playr_hnd)
       pause(0.5)
     elsif choice == 's'
-      prompt "Player stays."
+      prompt_yaml 'player_stay'
       pause(0.5)
       break
     end
   end
 end
 
-def dealer_turn!(dck, total, playr_hnd, dealr_hnd)
+def dealer_turn!(ttl_mtch, total, dck, playr_hnd, dealr_hnd)
   return if someone_busts?(total[:player_points])
   loop do
     break if someone_busts?(total[:dealer_points])
     clear_screen
 
-    display_board(total, playr_hnd, dealr_hnd, true)
+    display_board(ttl_mtch, total, playr_hnd, dealr_hnd, true)
     new_line
-    prompt "Dealer's turn:"
+    prompt_yaml 'dealer_turn'
     if total[:dealer_points] < 17
-      prompt "Dealer chooses to draw."
+      prompt_yaml 'dealer_draw'
       pause(1)
       new_line
 
@@ -147,7 +155,7 @@ def dealer_turn!(dck, total, playr_hnd, dealr_hnd)
       dealr_hnd << new_card
       update_points!(dealr_hnd, total, :dealer_points)
     else
-      prompt "Dealer chooses to stay."
+      prompt_yaml 'dealer_stay'
       break
     end
     pause(1)
@@ -165,7 +173,6 @@ end
 def update_points!(hnd, total, current_turn)
   hand_val = []
   hnd = aces_go_last(hnd)
-  # binding.pry
   hnd.flat_map do |card|
     hand_val << if card == 'ace'
                   (hand_val.flatten.sum > 10 ? WORTH[card][0] : WORTH[card][1])
@@ -199,35 +206,31 @@ def determine_winner(total)
   [winner, busts]
 end
 
-def display_match_winner(total, playr_hnd, dealr_hnd, winner, busts)
+def display_match_winner(winner, busts)
   match_winner = if    winner == :dealer && busts == :player
-                   DEALER_WINS.join
+                   'player_busts'
                  elsif winner == :player && busts == :dealer
-                   PLAYER_WINS.join
+                   'dealer_busts'
                  elsif winner == :player && busts == nil
-                   PLAYER_WINS[1]
+                   'player_wins'
                  elsif winner == :dealer && busts == nil
-                   DEALER_WINS[1]
+                   'dealer_wins'
                  end
 
-  display_board(total, playr_hnd, dealr_hnd, true)
-  new_line
-  prompt(match_winner)
+  prompt_yaml match_winner
 end
 
-def update_match_wins!(total_matches, winner)
+def update_match_wins!(ttl_mtch, winner)
   if winner == :player
-    total_matches['Player'] += 1
+    ttl_mtch['Player'] += 1
   elsif winner == :dealer
-    total_matches['Dealer'] += 1
+    ttl_mtch['Dealer'] += 1
   end
 end
 
-def game_winner?(total_matches)
-  total_matches.value?(5)
+def game_winner?(ttl_mtch)
+  ttl_mtch.value?(5)
 end
-
-# add display_game_winner
 
 # gameplay starts
 display_greeting
@@ -238,26 +241,35 @@ loop do # main loop
   loop do # match loop
     deck = CARD_NAMES * 4
     total = Hash.new # updates when any cards are given
-    player_hand, dealer_hand = initialize_hand(deck, total)
+    player_hand, dealer_hand = initialize_hand(total, deck)
 
-    player_turn!(deck, total, player_hand, dealer_hand)
-    dealer_turn!(deck, total, player_hand, dealer_hand)
+    player_turn!(total_matches, total, deck, player_hand, dealer_hand)
+    dealer_turn!(total_matches, total, deck, player_hand, dealer_hand)
 
+    clear_screen
+    display_board(total_matches, total, player_hand, dealer_hand, true)
+
+    new_line
     winner, busts = determine_winner(total)
-    display_match_winner(total, player_hand, dealer_hand, winner, busts)
+    display_match_winner(winner, busts)
     update_match_wins!(total_matches, winner)
     pause(1)
     break if game_winner?(total_matches)
+    
+    new_line
+    prompt_yaml 'ready_for_next_match?'
+    gets
   end
 
   puts "#{total_matches.key(5)} has won the game!"
-  pause(1) # temp
+  pause(1)
 
-  prompt "Do you want to play again? (y)es or no (any key)"
+  new_line
+  prompt_yaml 'play_again'
   break unless gets.chomp.downcase.start_with?('y')
 end
 
-prompt "Okay, goodbye!"
+prompt_yaml 'goodbye'
 
 # - setup 'first to win 5 hands, wins the game'
 # - setup variables to control cap number (21) and dealer's break point (17)
@@ -272,7 +284,7 @@ prompt "Okay, goodbye!"
 # - if game_winner is true, output a string with congrats # DONE
 # - ask if player wants to play again # DONE
 # - update name to display_match_winner # DONE
-# - output match score at the top of each turn
-# - add some buffer between match win and game win outputs
+# - output match score at the top of each turn # DONE
+# - add some buffer between match win and game win outputs # DONE
 
 # - Thank Seb for tip about regularly committing (it forces me to chunk work and think in smaller steps)
