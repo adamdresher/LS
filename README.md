@@ -36,3 +36,7 @@
       - [Nested Data Structures](RB101/lesson5/rb101.5.3_nested_data_structures.md)
       - [Working with Blocks](RB101/lesson5/rb101.5.4_working_with_blocks.md)
       - [Practice Problems](RB101/lesson5/rb101.5.5_practice_problems.md)
+  - [Lesson 6](RB101/lesson6)
+    - ***Programs:***
+      - [Tic Tac Toe](RB101/lesson6/tictactoe/)
+      - [Twenty One](RB101/lesson6/twenty_one/)
