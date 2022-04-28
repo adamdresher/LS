@@ -8,6 +8,8 @@ CARD_NAMES = %w(2 3 4 5 6 7 8 9 10 jack queen king ace)
 WORTH = { '2' => [2], '3' => [3], '4' => [4], '5' => [5], '6' => [6],
           '7' => [7], '8' => [8], '9' => [9], '10' => [10], 'jack' => [10],
           'queen' => [10], 'king' => [10], 'ace' => [1, 11] }
+SCORE_LIMIT = 21
+DEALER_STAYS = 17
 
 def prompt(msg)
   puts "=> #{msg}"
@@ -18,7 +20,7 @@ def prompt_yaml(msg)
 end
 
 def prompt_yaml_(msg)
-  puts "#{MESSAGES[msg]}"
+  puts MESSAGES[msg]
 end
 
 def new_line(lines=1)
@@ -59,12 +61,13 @@ end
 
 def display_greeting
   clear_screen
-  new_line(6) # can create a YAML if there's time
+  new_line(6)
   prompt_yaml_ 'welcome'
   new_line
   prompt_yaml_ 'rules0'
-  prompt_yaml_ 'rules1'
-  prompt_yaml_ 'rules2'
+  prompt_yaml_ 'rules1' # should figure out how to add variables to yaml
+  puts "   Win a hand/match by getting as close to #{SCORE_LIMIT}\
+ as possible without going over."
   prompt_yaml_ 'rules3'
   new_line
   prompt_yaml_ 'rules4'
@@ -75,7 +78,8 @@ end
 
 def display_board(ttl_mtch, total, playr_hnd, dealr_hnd, reveal_dealr_crd=false)
   new_line
-  puts "   Match score: You - #{ttl_mtch['Player']}, Dealer - #{ttl_mtch['Dealer']}"
+  puts "   Match score: You - #{ttl_mtch['Player']}, \
+Dealer - #{ttl_mtch['Dealer']}"
   prompt_yaml_ 'line'
   prompt "You have: #{joinor(playr_hnd)} (#{total[:player_points]} points)"
 
@@ -145,7 +149,7 @@ def dealer_turn!(ttl_mtch, total, dck, playr_hnd, dealr_hnd)
     display_board(ttl_mtch, total, playr_hnd, dealr_hnd, true)
     new_line
     prompt_yaml 'dealer_turn'
-    if total[:dealer_points] < 17
+    if total[:dealer_points] < DEALER_STAYS
       prompt_yaml 'dealer_draw'
       pause(1)
       new_line
@@ -175,7 +179,11 @@ def update_points!(hnd, total, current_turn)
   hnd = aces_go_last(hnd)
   hnd.flat_map do |card|
     hand_val << if card == 'ace'
-                  (hand_val.flatten.sum > 10 ? WORTH[card][0] : WORTH[card][1])
+                  if hand_val.flatten.sum > (SCORE_LIMIT - 11)
+                    WORTH[card][0]
+                  else
+                    WORTH[card][1]
+                  end
                 else
                   WORTH[card][0]
                 end
@@ -184,37 +192,35 @@ def update_points!(hnd, total, current_turn)
 end
 
 def someone_busts?(total)
-  total > 21
+  total > SCORE_LIMIT
 end
 
+# rubocop: disable Style/EmptyCaseCondition
 def determine_winner(total)
   total_playr_pnts = total[:player_points]
   total_dealr_pnts = total[:dealer_points]
 
-  winner, busts = if    someone_busts?(total_playr_pnts)
+  winner, busts = case
+                  when someone_busts?(total_playr_pnts)
                     [:dealer, :player]
-                  elsif someone_busts?(total_dealr_pnts)
+                  when someone_busts?(total_dealr_pnts)
                     [:player, :dealer]
+                  when total_playr_pnts > total_dealr_pnts
+                    [:player, nil]
                   else
-                    if total_playr_pnts > total_dealr_pnts
-                      [:player, nil]
-                    else
-                      [:dealer, nil]
-                    end
+                    [:dealer, nil]
                   end
 
   [winner, busts]
 end
+# rubocop: enable Style/EmptyCaseCondition
 
 def display_match_winner(winner, busts)
-  match_winner = if    winner == :dealer && busts == :player
-                   'player_busts'
-                 elsif winner == :player && busts == :dealer
-                   'dealer_busts'
-                 elsif winner == :player && busts == nil
-                   'player_wins'
-                 elsif winner == :dealer && busts == nil
-                   'dealer_wins'
+  match_winner = case [winner, busts]
+                 when [:dealer, :player] then 'player_busts'
+                 when [:player, :dealer] then 'dealer_busts'
+                 when [:player, :nil]    then 'player_wins'
+                 when [:dealer, :nil]    then 'dealer_wins'
                  end
 
   prompt_yaml match_winner
@@ -255,7 +261,7 @@ loop do # main loop
     update_match_wins!(total_matches, winner)
     pause(1)
     break if game_winner?(total_matches)
-    
+
     new_line
     prompt_yaml 'ready_for_next_match?'
     gets
@@ -271,20 +277,5 @@ end
 
 prompt_yaml 'goodbye'
 
-# - setup 'first to win 5 hands, wins the game'
-# - setup variables to control cap number (21) and dealer's break point (17)
-
-# - add total_match variable # DONE
-# - set hash to total_match: # NOT NEEDED, KEYS CAN BE CREATED DURING INCREMENTATION
-#   - set keys, player_wins: 0, dealer_wins: 0
-# - modify determine_winner to mutate total_match: # NOT PRETTY BUT DONE
-#   - key += 1
-# - create method to determine if game_winner is found # DONE
-#   - select key if its value is 5
-# - if game_winner is true, output a string with congrats # DONE
-# - ask if player wants to play again # DONE
-# - update name to display_match_winner # DONE
-# - output match score at the top of each turn # DONE
-# - add some buffer between match win and game win outputs # DONE
-
-# - Thank Seb for tip about regularly committing (it forces me to chunk work and think in smaller steps)
+# - Thank Seb for tip about regularly committing (it forces me to chunk work
+# and think in smaller steps)
