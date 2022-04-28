@@ -199,9 +199,7 @@ def determine_winner(total)
   [winner, busts]
 end
 
-def display_winner(total, playr_hnd, dealr_hnd) # update name to display_match_winner
-  winner, busts = determine_winner(total)
-
+def display_match_winner(total, playr_hnd, dealr_hnd, winner, busts)
   match_winner = if    winner == :dealer && busts == :player
                    DEALER_WINS.join
                  elsif winner == :player && busts == :dealer
@@ -217,11 +215,11 @@ def display_winner(total, playr_hnd, dealr_hnd) # update name to display_match_w
   prompt(match_winner)
 end
 
-def update_match_wins! # new, add parameters
-  if winner.downcase.include?('player')
-    total_match[:player_wins] += 1
-  elsif winner.downcase.include?('dealer')
-    total_match[:dealer_wins] += 1
+def update_match_wins!(total_matches, winner)
+  if winner == :player
+    total_matches[:player_wins] += 1
+  elsif winner == :dealer
+    total_matches[:dealer_wins] += 1
   end
 end
 
@@ -231,7 +229,7 @@ end
 display_greeting
 
 loop do # main loop
-  total_match = Hash.new(0) # mutated with Integer#+
+  total_matches = Hash.new(0) # mutated with Integer#+
 
   loop do # match loop
     deck = CARD_NAMES * 4
@@ -241,13 +239,14 @@ loop do # main loop
     player_turn!(deck, total, player_hand, dealer_hand)
     dealer_turn!(deck, total, player_hand, dealer_hand)
 
-    display_winner(total, player_hand, dealer_hand)
-    pause(1)
+    winner, busts = determine_winner(total)
+    display_match_winner(total, player_hand, dealer_hand, winner, busts)
+    update_match_wins!(total_matches, winner)
     new_line
     pause(1)
   end
 
-  puts total_match ; pause(1) # temp
+  puts total_matches ; pause(1) # temp
 
   prompt "Do you want to play again? (y)es or no (any key)"
   break unless gets.chomp.downcase.start_with?('y')
@@ -267,3 +266,6 @@ prompt "Okay, goodbye!"
 #   - select key if its value is 5
 # - if game_winner is true, output a string with congrats
 # - ask if player wants to play again
+# - update name to display_match_winner # DONE
+
+# - Thank Seb for tip about regularly committing (it forces me to chunk work and think in smaller steps)
