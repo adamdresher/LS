@@ -217,10 +217,14 @@ end
 
 def update_match_wins!(total_matches, winner)
   if winner == :player
-    total_matches[:player_wins] += 1
+    total_matches['Player'] += 1
   elsif winner == :dealer
-    total_matches[:dealer_wins] += 1
+    total_matches['Dealer'] += 1
   end
+end
+
+def game_winner?(total_matches)
+  total_matches.value?(5)
 end
 
 # add display_game_winner
@@ -242,11 +246,12 @@ loop do # main loop
     winner, busts = determine_winner(total)
     display_match_winner(total, player_hand, dealer_hand, winner, busts)
     update_match_wins!(total_matches, winner)
-    new_line
     pause(1)
+    break if game_winner?(total_matches)
   end
 
-  puts total_matches ; pause(1) # temp
+  puts "#{total_matches.key(5)} has won the game!"
+  pause(1) # temp
 
   prompt "Do you want to play again? (y)es or no (any key)"
   break unless gets.chomp.downcase.start_with?('y')
@@ -262,10 +267,12 @@ prompt "Okay, goodbye!"
 #   - set keys, player_wins: 0, dealer_wins: 0
 # - modify determine_winner to mutate total_match: # NOT PRETTY BUT DONE
 #   - key += 1
-# - create method to determine if game_winner is found
+# - create method to determine if game_winner is found # DONE
 #   - select key if its value is 5
-# - if game_winner is true, output a string with congrats
-# - ask if player wants to play again
+# - if game_winner is true, output a string with congrats # DONE
+# - ask if player wants to play again # DONE
 # - update name to display_match_winner # DONE
+# - output match score at the top of each turn
+# - add some buffer between match win and game win outputs
 
 # - Thank Seb for tip about regularly committing (it forces me to chunk work and think in smaller steps)
