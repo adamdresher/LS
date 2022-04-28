@@ -184,50 +184,86 @@ def determine_winner(total)
   total_playr_pnts = total[:player_points]
   total_dealr_pnts = total[:dealer_points]
 
-  if someone_busts?(total_playr_pnts)
-    DEALER_WINS.join
-  elsif someone_busts?(total_dealr_pnts)
-    PLAYER_WINS.join
-  else
-    total_playr_pnts > total_dealr_pnts ? PLAYER_WINS[1] : DEALER_WINS[1]
-  end
+  winner, busts = if    someone_busts?(total_playr_pnts)
+                    [:dealer, :player]
+                  elsif someone_busts?(total_dealr_pnts)
+                    [:player, :dealer]
+                  else
+                    if total_playr_pnts > total_dealr_pnts
+                      [:player, nil]
+                    else
+                      [:dealer, nil]
+                    end
+                  end
+
+  [winner, busts]
 end
 
-def display_winner(total, playr_hnd, dealr_hnd)
-  winner = determine_winner(total)
+def display_winner(total, playr_hnd, dealr_hnd) # update name to display_match_winner
+  winner, busts = determine_winner(total)
+
+  match_winner = if    winner == :dealer && busts == :player
+                   DEALER_WINS.join
+                 elsif winner == :player && busts == :dealer
+                   PLAYER_WINS.join
+                 elsif winner == :player && busts == nil
+                   PLAYER_WINS[1]
+                 elsif winner == :dealer && busts == nil
+                   DEALER_WINS[1]
+                 end
 
   display_board(total, playr_hnd, dealr_hnd, true)
   new_line
-  prompt(winner)
+  prompt(match_winner)
 end
 
-# main loop
+def update_match_wins! # new, add parameters
+  if winner.downcase.include?('player')
+    total_match[:player_wins] += 1
+  elsif winner.downcase.include?('dealer')
+    total_match[:dealer_wins] += 1
+  end
+end
+
+# add display_game_winner
+
+# gameplay starts
 display_greeting
 
-loop do
-  deck = CARD_NAMES * 4
-  total = Hash.new # total is updated when any cards are given
-  player_hand, dealer_hand = initialize_hand(deck, total)
+loop do # main loop
+  total_match = Hash.new(0) # mutated with Integer#+
 
-  player_turn!(deck, total, player_hand, dealer_hand)
-  dealer_turn!(deck, total, player_hand, dealer_hand)
+  loop do # match loop
+    deck = CARD_NAMES * 4
+    total = Hash.new # updates when any cards are given
+    player_hand, dealer_hand = initialize_hand(deck, total)
 
-  display_winner(total, player_hand, dealer_hand)
-  pause(1)
-  new_line
+    player_turn!(deck, total, player_hand, dealer_hand)
+    dealer_turn!(deck, total, player_hand, dealer_hand)
+
+    display_winner(total, player_hand, dealer_hand)
+    pause(1)
+    new_line
+    pause(1)
+  end
+
+  puts total_match ; pause(1) # temp
+
   prompt "Do you want to play again? (y)es or no (any key)"
   break unless gets.chomp.downcase.start_with?('y')
 end
 
 prompt "Okay, goodbye!"
 
-# - update someone_busts name to someone_busts?
-# - someone_busts checks total
-# - update determine_points name to update_points!
-# - update_points! which mutates total
-# - refactor determine_points_winner, display_winner
-# - update determine_points_winner name to determine_winner
-# - determine_winner returns the winner
-# - display_winner displays winner using determine_winner
 # - setup 'first to win 5 hands, wins the game'
 # - setup variables to control cap number (21) and dealer's break point (17)
+
+# - add total_match variable # DONE
+# - set hash to total_match: # NOT NEEDED, KEYS CAN BE CREATED DURING INCREMENTATION
+#   - set keys, player_wins: 0, dealer_wins: 0
+# - modify determine_winner to mutate total_match: # NOT PRETTY BUT DONE
+#   - key += 1
+# - create method to determine if game_winner is found
+#   - select key if its value is 5
+# - if game_winner is true, output a string with congrats
+# - ask if player wants to play again
