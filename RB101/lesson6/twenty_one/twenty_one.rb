@@ -37,9 +37,8 @@ def pause(time, msg=nil, output=false)
     print '.'
     sleep 0.1
   end
-  print " #{msg[1]}!"
+  puts " #{msg[1]}!"
   sleep 1
-  new_line
 end
 
 def shuffling
