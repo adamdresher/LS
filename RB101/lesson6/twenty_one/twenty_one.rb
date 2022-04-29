@@ -78,9 +78,9 @@ def draw_card!(dck)
   dck.pop
 end
 
-# def display_cards(cards)
-#   cards.each {|card| "#{card[0]} of #{card[1]}"}
-# end
+def create_cards(cards)
+  cards.map {|card| "#{card[0]} of #{card[1]}"}
+end
 
 def display_greeting
   clear_screen
@@ -101,20 +101,37 @@ def display_greeting
 end
 
 # delr_hnd is inconsistent with other methods in order to appease rubocop gods
-def display_board(ttl_wins, mtch_ttl, hands, reveal_dealr=false)
-  new_line
-  puts "   Scoreboard: You - #{ttl_wins['Player']}, \
-Dealer - #{ttl_wins['Dealer']}"
-  prompt_yaml_ 'line'
-  prompt "You have: #{joinor(hands[:playr])} \
-(#{mtch_ttl[:playr_points]} points)"
+# def display_board(ttl_wins, mtch_ttl, hands, reveal_dealr=false)
+#   new_line
+#   puts "   Scoreboard: You - #{ttl_wins['Player']}, \
+# Dealer - #{ttl_wins['Dealer']}"
+#   prompt_yaml_ 'line'
+#   prompt "You have: #{joinor(display_cards(hands[:playr]))} \
+# ({mtch_ttl[:playr_points]} points)" # receiving array not string
 
-  if reveal_dealr
-    prompt "Dealer has: #{joinor(hands[:dealr])} \
-(#{mtch_ttl[:dealr_points]} points)"
-  else
-    prompt "Dealer has: #{hands[:dealr][0]} and an unknown card"
-  end
+#   if reveal_dealr
+#     prompt "Dealer has: #{joinor(display_cards(hands[:dealr]))} \
+# ({mtch_ttl[:dealr_points]} points)"
+#   else
+#     prompt "Dealer has: #{display_cards(hands[:dealr][0])} and an unknown card"
+#   end
+# end
+
+# testing out display
+def test_display_board(hands, reveal_dealr=false)
+  new_line
+#  puts "   Scoreboard: You - #{ttl_wins['Player']}, \
+#Dealer - #{ttl_wins['Dealer']}"
+  prompt_yaml_ 'line'
+  prompt "You have: #{joinor(create_cards(hands[:playr]))}"# \
+#({mtch_ttl[:playr_points]} points)" # receiving array not string
+
+  # if reveal_dealr
+    prompt "Dealer has: #{joinor(create_cards(hands[:dealr]))}"# \
+#({mtch_ttl[:dealr_points]} points)"
+  # else
+    prompt "Dealer has: #{create_cards(hands[:dealr][0])} and an unknown card"
+  # end
 end
 
 def joinor(hnd)
@@ -276,11 +293,13 @@ end
 #   total_wins = Hash.new(0) # mutated with Integer#+
 
 #   loop do # match loop
-#     deck = CARD_NAMES * 4
+    deck = initialize_deck
 #     match_totals = Hash.new # updates when any cards are given
 #     shuffling
-#     hands = initialize_hand!(match_totals, deck)
-
+    # hands = initialize_hand!(match_totals, deck)
+    hands = initialize_hand!(0, deck)
+    p hands
+    test_display_board(hands) # testing out display
 #     player_turn!(total_wins, match_totals, deck, hands)
 #     dealer_turn!(total_wins, match_totals, deck, hands)
 
@@ -312,22 +331,10 @@ end
 # NEXT
 # - add suit to cards
 
-# - set SUITS to array of suit characters (unicode for fun?)
-# - update deck for nested two element arrays (or hashes?)
-# - update initialize_hand! to create 
+# - update initialize_hand! to create
 # - update hands to use only card names
-# - update display to use both elements
+# - update display to use both elements # DONE
 # - update determine_points to use only card names
-
-# Deck, Option 3: # deck is suit specific, unnecessary for given requirements
-# - Create constants:
-#   - `SUITS`, an array which contains strings of `(spades, hearts, clubs. diamonds)` # DONE
-#   - `VALUES`, an array which contains strings of `%w(2 3 4 5 6 7 8 9 10 jack queen king ace)` # DONE
-#   - `WORTH`, a hash which contains how many points the values are worth `{2=>2, 3=>3, 4=>4, 5=>5, 6=>6, 7=>7, 8=>8, 9=>9, 10=>10, jack: 10, queen: 10, king: 10, ace: [1, 11]}` # DONE
-
-# - Initialize a deck:
-#   - Create a hash of 52 key-value pairs:
-#     - Create strings by combining `SUITS` and `VALUES` with every combination (order does not matter)
 
 # | Suit | Name | unicode num |
 # | ---- | ---- | ----------- |
