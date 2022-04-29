@@ -42,7 +42,7 @@ def pause(time, msg=nil, output=false)
 end
 
 def shuffling
-  pause(20, ['Shuffling ', 'FINISHED'], true)
+  pause(15, ['Shuffling ', 'FINISHED'], true)
 end
 
 def drumroll(ttl_wins)
@@ -55,20 +55,20 @@ def initialize_deck
   CARD_NAMES * 4
 end
 
-def initialize_hand!(mtch_ttls, dck)
-  player_hand = []
-  dealer_hand = []
+def initialize_hand!(mtch_ttl, dck)
+  # hands = Hash.new([]) # mutates the same array object
+  hands = { playr: [], dealr: [] } # another option
 
   2.times { dck.shuffle! }
   2.times do
-    player_hand << draw_card!(dck)
-    dealer_hand << draw_card!(dck)
+    hands[:playr] << draw_card!(dck)
+    hands[:dealr] << draw_card!(dck)
   end
 
-  update_points!(player_hand, mtch_ttls, :player_points)
-  update_points!(dealer_hand, mtch_ttls, :dealer_points)
+  update_points!(hands[:playr], mtch_ttl, :playr_points)
+  update_points!(hands[:dealr], mtch_ttl, :dealr_points)
 
-  [player_hand, dealer_hand]
+  hands
 end
 
 def draw_card!(dck)
@@ -93,17 +93,19 @@ def display_greeting
 end
 
 # delr_hnd is inconsistent with other methods in order to appease rubocop gods
-def display_board(ttl_wins, mtch_tl, playr_hnd, delr_hnd, rvel_dealr_crd=false)
+def display_board(ttl_wins, mtch_ttl, hands, reveal_dealr=false)
   new_line
   puts "   Scoreboard: You - #{ttl_wins['Player']}, \
 Dealer - #{ttl_wins['Dealer']}"
   prompt_yaml_ 'line'
-  prompt "You have: #{joinor(playr_hnd)} (#{mtch_tl[:player_points]} points)"
+  prompt "You have: #{joinor(hands[:playr])} \
+(#{mtch_ttl[:playr_points]} points)"
 
-  if rvel_dealr_crd
-    prompt "Dealer has: #{joinor(delr_hnd)} (#{mtch_tl[:dealer_points]} points)"
+  if reveal_dealr
+    prompt "Dealer has: #{joinor(hands[:dealr])} \
+(#{mtch_ttl[:dealr_points]} points)"
   else
-    prompt "Dealer has: #{delr_hnd[0]} and an unknown card"
+    prompt "Dealer has: #{hands[:dealr][0]} and an unknown card"
   end
 end
 
@@ -115,11 +117,11 @@ def joinor(hnd)
   end
 end
 
-def choose_turn(ttl_wins, mtch_tl, playr_hnd, dealr_hnd)
+def choose_turn(ttl_wins, mtch_ttl, hands)
   choice = nil
   loop do
     clear_screen
-    display_board(ttl_wins, mtch_tl, playr_hnd, dealr_hnd)
+    display_board(ttl_wins, mtch_ttl, hands)
     new_line
     prompt_yaml 'player_turn'
     prompt_yaml 'draw_or_stay'
@@ -132,21 +134,21 @@ def choose_turn(ttl_wins, mtch_tl, playr_hnd, dealr_hnd)
   choice
 end
 
-def player_draws!(mtch_tl, dck, playr_hnd)
+def player_draws!(mtch_ttl, dck, playr_hnd)
   new_card = draw_card!(dck)
   prompt "Player receives a #{new_card}."
   playr_hnd << new_card
 
-  update_points!(playr_hnd, mtch_tl, :player_points)
+  update_points!(playr_hnd, mtch_ttl, :playr_points)
 end
 
-def player_turn!(ttl_wins, mtch_tl, dck, playr_hnd, dealr_hnd)
+def player_turn!(ttl_wins, mtch_ttl, dck, hands)
   loop do
-    break if someone_busts?(mtch_tl[:player_points])
+    break if someone_busts?(mtch_ttl[:playr_points])
 
-    choice = choose_turn(ttl_wins, mtch_tl, playr_hnd, dealr_hnd)
+    choice = choose_turn(ttl_wins, mtch_ttl, hands)
     if choice == 'd'
-      player_draws!(mtch_tl, dck, playr_hnd)
+      player_draws!(mtch_ttl, dck, hands[:playr])
       pause 0.5
     elsif choice == 's'
       prompt_yaml 'player_stay'
@@ -157,7 +159,7 @@ def player_turn!(ttl_wins, mtch_tl, dck, playr_hnd, dealr_hnd)
   end
 end
 
-def dealer_draws!(dck, mtch_tl, dealr_hnd)
+def dealer_draws!(dck, mtch_ttl, dealr_hnd)
   prompt_yaml 'dealer_draw'
   pause 1
   new_line
@@ -165,22 +167,22 @@ def dealer_draws!(dck, mtch_tl, dealr_hnd)
   prompt "Dealer receives a #{new_card}."
   dealr_hnd << new_card
 
-  update_points!(dealr_hnd, mtch_tl, :dealer_points)
+  update_points!(dealr_hnd, mtch_ttl, :dealr_points)
 end
 
-def dealer_turn!(ttl_wins, mtch_tl, dck, playr_hnd, dealr_hnd)
-  return if someone_busts?(mtch_tl[:player_points])
+def dealer_turn!(ttl_wins, mtch_ttl, dck, hands)
+  return if someone_busts?(mtch_ttl[:playr_points])
 
   loop do
-    break if someone_busts?(mtch_tl[:dealer_points])
+    break if someone_busts?(mtch_ttl[:dealr_points])
 
     clear_screen
-    display_board(ttl_wins, mtch_tl, playr_hnd, dealr_hnd, true)
+    display_board(ttl_wins, mtch_ttl, hands, true)
     new_line
     prompt_yaml 'dealer_turn'
 
-    if mtch_tl[:dealer_points] < DEALER_STAYS
-      dealer_draws!(dck, mtch_tl, dealr_hnd)
+    if mtch_ttl[:dealr_points] < DEALER_STAYS
+      dealer_draws!(dck, mtch_ttl, hands[:dealr])
     else
       prompt_yaml 'dealer_stay'
       break
@@ -197,7 +199,7 @@ def aces_go_last(hnd)
   end
 end
 
-def update_points!(hnd, mtch_tl, current_turn)
+def update_points!(hnd, mtch_ttl, current_turn)
   hand_val = []
   hnd = aces_go_last(hnd)
 
@@ -212,16 +214,16 @@ def update_points!(hnd, mtch_tl, current_turn)
                   WORTH[card][0]
                 end
   end
-  mtch_tl[current_turn] = hand_val.sum
+  mtch_ttl[current_turn] = hand_val.sum
 end
 
-def someone_busts?(mtch_tl)
-  mtch_tl > SCORE_LIMIT
+def someone_busts?(mtch_ttl)
+  mtch_ttl > SCORE_LIMIT
 end
 
-def determine_winner(mtch_tl)
-  total_playr_pnts = mtch_tl[:player_points]
-  total_dealr_pnts = mtch_tl[:dealer_points]
+def determine_winner(mtch_ttl)
+  total_playr_pnts = mtch_ttl[:playr_points]
+  total_dealr_pnts = mtch_ttl[:dealr_points]
 
   winner, busts = if someone_busts?(total_playr_pnts)
                     [:dealer, :player]
@@ -269,16 +271,16 @@ loop do # main loop
     deck = CARD_NAMES * 4
     match_totals = Hash.new # updates when any cards are given
     shuffling
-    player_hand, dealer_hand = initialize_hand!(match_totals, deck)
+    hands = initialize_hand!(match_totals, deck)
 
-    player_turn!(total_wins, match_totals, deck, player_hand, dealer_hand)
-    dealer_turn!(total_wins, match_totals, deck, player_hand, dealer_hand)
+    player_turn!(total_wins, match_totals, deck, hands)
+    dealer_turn!(total_wins, match_totals, deck, hands)
 
     clear_screen
 
     winner, busts = determine_winner(match_totals)
     update_match_wins!(total_wins, winner)
-    display_board(total_wins, match_totals, player_hand, dealer_hand, true)
+    display_board(total_wins, match_totals, hands, true)
     new_line
     display_match_winner(winner, busts)
     pause 1
@@ -298,3 +300,17 @@ loop do # main loop
 end
 
 prompt_yaml 'goodbye'
+
+# DONE
+# - update rvel_dealr_crd to reveal_dealr
+# - extract total_wins from displayboard and make new method: display_scoreboard
+# - update mtch_tl to mtch_ttl
+# - update :dealer_points to :dealr_points
+# - update :player_points to :playr_points
+# - set initialize_hand! to an array, instead of two variables:
+#   - hands = { player: 0, dealer: 0 }
+#   - requires major surgury on all methods referencing player_hnd/dealr_hnd
+#     (object type, syntax, scope)
+
+# NEXT
+# - add suit to cards
