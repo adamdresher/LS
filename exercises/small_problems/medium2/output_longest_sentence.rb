@@ -1,20 +1,59 @@
-# f = File.readlines('four_score.txt', '.')
+def output_longest_sentence(filename)
+  longest_sentence = determine_longest_sentence(filename)
+  word_count = longest_sentence.split.size
 
-# f.each do |sentence|
-#   puts sentence
-#   puts "\n"
-# end
-
-sentences = []
-
-File.foreach('four_score.txt', '.') do |sentence|
-  sentence.gsub!(/\n/, ' ').strip!
-  sentences << sentence
+  puts "The following sentence has #{word_count} words and is the longest sentence in #{filename}:"
+  puts
+  puts longest_sentence
 end
 
-sentences.sort! { |a, b| b.split.count <=> a.split.count }
-largest_sentence = sentences.first
-word_count = largest_sentence.split.count
-puts "This following line is #{word_count} words long:"
-puts
-puts largest_sentence
+def determine_longest_sentence(filename)
+  longest_sentence = ''
+  new_sentence = ''
+  lines = []
+
+  File.foreach(filename) do |line| # avoids reading entire file at once
+    lines << line.chomp!
+    lines = lines.join(' ').strip
+
+    if sentence_found?(lines)
+      new_sentence, lines = separate_sentence(lines)
+    end
+
+    if new_sentence.split.size > longest_sentence.split.size
+      longest_sentence = new_sentence
+    end
+
+    lines = [lines]
+  end
+  longest_sentence
+end
+
+def sentence_found?(string)
+  string.match?(/\.|\?|\!/)
+end
+
+def separate_sentence(string) # returns sentence with ending punctuation
+  new_sentence, sentence_builder = case delimiter_type(string)
+                                   when '.'
+                                   string.split(/\./)
+                                   when '!'
+                                   string.split(/\!/)
+                                   when '?'
+                                   string.split(/\?/)
+                                   end
+  [new_sentence + delimiter_type(string), sentence_builder]
+end
+
+def delimiter_type(string)
+  if string.match(/\./)
+    '.'
+  elsif string.match(/\!/)
+    '!'
+  elsif string.match(/\?/)
+    '?'
+  end
+end
+
+output_longest_sentence('four_score.txt') # => 86 words long ...
+output_longest_sentence('shelly_mary_frankenstein.txt') # => 1576 words long ...

@@ -68,13 +68,14 @@ earth.
 
 **Mental Model:**
 
-- 
+- Take a String argument referencing a file.  Create longest_sentence to compare against.  Iterate over the file.  On each iteration, import 1 line and add it to sentence_builder.  Check if a delimiter is found.
+When a delimiter is found, remove the sentence and set it to a new_sentence.  Compare the longest_sentence to the new_sentence.  If the new_sentence is longer, use it to replace the longest_sentence.  Next iteration.  When iterations are finished, split the longest_sentence by whitespaces and count the number of words.  Output the number of words and the sentence.
 
 ---
 ### Examples/Tests
 ```ruby
-/four_score.txt
-/shelly_mary_frankenstein.txt
+/four_score.txt # => 86 words long
+/shelly_mary_frankenstein.txt # => 157 words long
 ```
 ---
 ### Data Structures
@@ -82,8 +83,31 @@ earth.
 
 ---
 ### Algorithm
-****
-- 
+output_longest_sentence(filename)
+  initialize longest_sentence to an empty String
+  initialize new_sentence to an empty String
+  initialize sentence_builder to an empty String
+  iterate over filename:
+    import 1 line and append it to sentence_builder with a whitespace delimiter
+    strip sentence_builder of the beginning and ending of whitespaces and return carriages
+    pass sentence_builder to sentence_found?
+      if true, pass sentence_builder to separate_sentence
+        save sentence_builder and new_sentence
+    check if new_sentence has more words than longest_sentence
+      replace longest_sentence if true
+  output "The following sentence has X words and is the longest sentence in FILENAME:"
+  output longest_sentence
+
+found_sentence?(string)
+  check if string has a delimiter (\. \?, \! \n\n)
+
+separate_sentence(string)
+  locate and save delimiter
+  split with delimiter
+  remove first string element and assign to new_sentence String
+  assign the rest of the string to sentence_builder String
+  prepend new_sentence with saved delimiter unless it is a return carriage
+  return new_sentence and sentence_builder
 
 ---
 ### Code
