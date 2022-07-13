@@ -107,6 +107,10 @@ class Player
   def initialize
     set_name
   end
+
+  def to_s
+    name
+  end
 end
 
 class Human < Player
@@ -132,6 +136,8 @@ class Human < Player
       pause_and_clear_screen
     end
     self.move = OPTIONS[choice.to_sym].new
+    # record_move
+    # won't work because Human doesn't have access to Computer
   end
 
   private
@@ -150,28 +156,32 @@ class Computer < Player
   def choose_move
     choice = OPTIONS[OPTIONS.keys.sample]
     self.move = choice.new
+    # record_move(self.move)
+    # won't work because Computer doesn't have access to Human
   end
 end
 
 # game engine
 class RPSgame
   include Viewable
+  attr_reader :human, :computer, :scoreboard
 
   def initialize
     @human = Human.new
     @computer = Computer.new
-    @score = { human => 0, computer => 0 }
+    # @score = { human => 0, computer => 0 } # encapsulated within scoreboard
+    @scoreboard = Scoreboard.new # test
     @single_or_set = nil
   end
 
   def play
-    clear_screen
     display_welcome_message
     loop do
-      choose_single_or_set
+      setup_game
       single_or_set == 1 ? play_match : play_set
       display_game_winner unless single_or_set == 1
-      break unless play_again?
+      scoreboard.display_history(human, computer) if valid?('display_history?')
+      break unless valid?('play_again?')
       clear_screen
     end
     display_goodbye_message
@@ -179,9 +189,11 @@ class RPSgame
 
   private
 
-  attr_accessor :human, :computer, :single_or_set, :score
+  attr_accessor :single_or_set # , :score # encapsulated within scoreboard
+  attr_writer :human, :computer
 
   def display_welcome_message
+    clear_screen
     puts
     prompt "Hello #{human.name}.  \
 Welcome to Rock, Paper, Scissors, Lizard, Spock!"
@@ -191,9 +203,15 @@ Welcome to Rock, Paper, Scissors, Lizard, Spock!"
     prompt_yml 'goodbye'
   end
 
+  def setup_game
+    setup_scoreboard
+    display_menu
+    choose_single_or_set
+  end
+
   def choose_single_or_set
+    # add new Array to history_of_moves in scoreboard; reset scoreboard.score
     loop do
-      display_menu
       self.single_or_set = gets.chomp.downcase
       if single_or_set == 'h'
         display_instructions
@@ -202,6 +220,12 @@ Welcome to Rock, Paper, Scissors, Lizard, Spock!"
       break if [1, 2].include?(self.single_or_set = single_or_set.to_i)
       display_menu_try_again
     end
+  end
+
+  def setup_scoreboard
+    scoreboard.history_of_moves << [] # test
+    # play_match is referenced by play_set
+    scoreboard.reset_score(human, computer) # test
   end
 
   def display_menu
@@ -229,6 +253,7 @@ Welcome to Rock, Paper, Scissors, Lizard, Spock!"
     clear_screen
     human.choose_move
     computer.choose_move
+    scoreboard.record_move(human, computer) # test
     display_moves
     display_match_winner
   end
@@ -236,8 +261,9 @@ Welcome to Rock, Paper, Scissors, Lizard, Spock!"
   def play_set
     loop do
       play_match
-      score[match_winner] += 1 if match_winner
-      display_score
+      # score[match_winner] += 1 if match_winner
+      scoreboard.add_point(match_winner) if match_winner # test
+      scoreboard.display_score(human, computer)
       break if game_winner
       prompt_yml2 'press_enter'
       gets
@@ -246,19 +272,22 @@ Welcome to Rock, Paper, Scissors, Lizard, Spock!"
 
   def display_moves
     puts
-    prompt "#{human.name} chose #{human.move}" # check
-    prompt "#{computer.name} chose #{computer.move}" # check
+    prompt "#{human} chose #{human.move}"
+    prompt "#{computer} chose #{computer.move}"
   end
 
-  def display_score
-    puts
-    prompt "#{human.name} has #{score[human]} #{format_points(human)}"
-    prompt "#{computer.name} has #{score[computer]} #{format_points(computer)}"
-  end
+  # def display_score # moved to Scoreboard
+  #   puts
+  #   # prompt "#{human.name} has #{score[human]} #{format_points(human)}"
+  #   # prompt "#{computer.name} has #{score[computer]} #{format_points(computer)}"
+  #   prompt "#{human.name} has #{scoreboard.score[human]} #{format_points(human)}" # test
+  #   prompt "#{computer.name} has #{scoreboard.score[computer]} #{format_points(computer)}" # test
+  # end
 
-  def format_points(player)
-    score[player] == 1 ? 'point' : 'points'
-  end
+  # def format_points(player) # moved to Scoreboard
+  #   # score[player] == 1 ? 'point' : 'points'
+  #   scoreboard.score[player] == 1 ? 'point' : 'points' # test
+  # end
 
   # rubocop:disable Style/EmptyElse
   def match_winner
@@ -273,13 +302,14 @@ Welcome to Rock, Paper, Scissors, Lizard, Spock!"
   # rubocop:enable Style/EmptyElse
 
   def game_winner
-    score.any? { |_, v| v >= 10 }
+    # score.any? { |_, v| v >= 10 }
+    scoreboard.score.any? { |_, v| v >= 10 } # test
   end
 
   def display_match_winner
     puts
     prompt(if match_winner
-             "#{match_winner.name} wins the match!"
+             "#{match_winner} wins the match!"
            else
              "It's a tie!"
            end)
@@ -287,19 +317,67 @@ Welcome to Rock, Paper, Scissors, Lizard, Spock!"
 
   def display_game_winner
     puts
-    prompt "#{score.key(10).name} wins the game!"
+    # prompt "#{score.key(10).name} wins the game!"
+    prompt "#{scoreboard.score.key(10).name} wins the game!" # test
   end
 
-  def play_again?
-    answer = nil
+  def valid?(answer) # test play_again? && display_history?
+    choice = nil
     loop do
       puts
-      prompt_yml 'play_again'
-      answer = gets.chomp.downcase
-      break if answer[0] == 'y' || answer[0] == 'n'
-      prompt_yml 'play_again2'
+      prompt_yml answer
+      choice = gets.chomp.downcase
+      break if choice[0] == 'y' || choice[0] == 'n'
+      prompt_yml 'try_again'
     end
-    answer.start_with? 'y'
+    choice.start_with? 'y'
+  end
+end
+
+class Scoreboard < RPSgame
+include Viewable
+  attr_accessor :score
+  attr_reader :history_of_moves
+
+  def initialize
+    @score = { human => 0, computer => 0 }
+    @history_of_moves = []
+  end
+
+  def add_point(player) # test
+    self.score[player] += 1
+  end
+
+  def reset_score(human, computer) # test
+    self.score = { human => 0, computer => 0 }
+  end
+
+  def display_score(human, computer)
+    puts
+    prompt "#{human} has #{score[human]} #{format_points(human)}" # test
+    prompt "#{computer} has #{score[computer]} #{format_points(computer)}"
+    # test
+  end
+
+  def format_points(player)
+    score[player] == 1 ? 'point' : 'points' # test
+  end
+
+  def record_move(human, computer) # test
+    history_of_moves[-1] << { human => human.move, computer => computer.move }
+  end
+
+  def display_history(human, computer) # test
+    history_of_moves.each_with_index do |game, game_idx|
+      puts
+      prompt "Game # #{game_idx + 1}:"
+
+      game.each_with_index do |match, match_idx|
+        prompt "Match # #{match_idx + 1}:"
+        puts "         #{human} played #{match[human]}".ljust(20) + "  " +
+             "#{computer} played #{match[computer]}".ljust(20)
+      end
+    end
   end
 end
 
