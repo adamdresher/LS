@@ -1,13 +1,51 @@
+module Viewable
+  def clear_screen
+    system('clear')
+  end
+
+  def prompt(msg)
+    puts "=> #{msg}"
+  end
+end
+
 class Move
-  VALUES = ['rock', 'paper', 'scissors']
+  VALUES = ['rock', 'paper', 'scissors', 'lizard', 'spock']
 
   def initialize(value)
-    @value = value
+    @value = value.downcase == 'spock' ? value.capitalize : value
   end
 
   def to_s
     @value
   end
+
+  def >(other_move)
+    (scissors? && other_move.paper?) ||
+      (paper? && other_move.rock?) ||
+      (rock? && other_move.lizard?) ||
+      (lizard? && other_move.spock?) ||
+      (spock? && other_move.scissors?) ||
+      (scissors? && other_move.lizard?) ||
+      (lizard? && other_move.paper?) ||
+      (paper? && other_move.spock?) ||
+      (spock? && other_move.rock?) ||
+      (rock? && other_move.scissors?)
+  end
+
+  def <(other_move)
+    (paper? && other_move.scissors?) ||
+      (rock? && other_move.paper?) ||
+      (lizard? && other_move.rock?) ||
+      (spock? && other_move.lizard?) ||
+      (scissors? && other_move.spock?) ||
+      (lizard? && other_move.scissors?) ||
+      (paper? && other_move.lizard?) ||
+      (spock? && other_move.paper?) ||
+      (rock? && other_move.spock?) ||
+      (scissors? && other_move.rock?)
+  end
+
+  protected
 
   def rock?
     @value == 'rock'
@@ -21,20 +59,18 @@ class Move
     @value == 'scissors'
   end
 
-  def >(other_move)
-    (rock? && other_move.scissors?) ||
-      (paper? && other_move.rock?) ||
-      (scissors? && other_move.paper?)
+  def lizard?
+    @value == 'lizard'
   end
 
-  def <(other_move)
-    (rock? && other_move.paper?) ||
-      (paper? && other_move.scissors?) ||
-      (scissors? && other_move.rock?)
+  def spock?
+    @value == 'Spock'
   end
 end
 
 class Player
+  include Viewable
+
   attr_accessor :move, :name
 
   def initialize
@@ -45,10 +81,12 @@ end
 class Human < Player
   def set_name
     loop do
-      puts "What's your name?"
+      clear_screen
+      puts
+      prompt "What's your name?"
       self.name = gets.chomp.capitalize
       break unless name.empty?
-      puts "Sorry, please give a name."
+      prompt "Sorry, please give a name."
     end
   end
 
@@ -56,10 +94,10 @@ class Human < Player
     choice = nil
     loop do
       puts
-      puts "Choose a move: Rock, Paper, or Scissors"
+      prompt "Choose a move: Rock, Paper, Scissors, Lizard, or Spock"
       choice = gets.chomp.downcase
       break if Move::VALUES.include? choice
-      puts "Sorry, wrong choice."
+      prompt "Sorry, wrong choice."
     end
     self.move = Move.new(choice)
   end
@@ -77,7 +115,7 @@ end
 
 # game engine
 class RPSgame
-  attr_accessor :human, :computer, :single_or_set, :score
+  include Viewable
 
   def initialize
     @human = Human.new
@@ -86,31 +124,76 @@ class RPSgame
     @single_or_set = nil
   end
 
+  def play
+    clear_screen
+    display_welcome_message
+    loop do
+      choose_single_or_set
+      single_or_set == 1 ? play_match : play_set
+      display_game_winner unless single_or_set == 1
+      break unless play_again?
+      clear_screen
+    end
+    display_goodbye_message
+  end
+
+  private
+
+  attr_accessor :human, :computer, :single_or_set, :score
+
   def display_welcome_message
     puts
-    prompt "Hello #{human.name}.  Welcome to Rock, Paper, Scissors!"
+    prompt "Hello #{human.name}.  \
+Welcome to Rock, Paper, Scissors, Lizard, Spock!"
   end
 
   def display_goodbye_message
-    prompt "Thanks for playing Rock, Paper, Scissors!"
-  end
-
-  def clear_screen
-    system('clear')
-  end
-
-  def prompt(msg)
-    puts "=> #{msg}"
+    prompt "Thanks for playing Rock, Paper, Scissors, Lizard, Spock!\n\
+   Goodbye"
   end
 
   def choose_single_or_set
     loop do
-      prompt "Choose your gameplay:"
-      puts "     A single match     (1)\n     First to 10 points (2)"
-      @single_or_set = gets.chomp.to_i
-      break if [1, 2].include? single_or_set
+      puts
+      prompt "Menu:"
+      puts "     Play a single match     (1)\
+      \n     Play first to 10 points (2)\
+      \n     How to play RPSLS       (H)"
+      self.single_or_set = gets.chomp.downcase
+      if self.single_or_set == 'h'
+        display_instructions
+        clear_screen
+        next
+      end
+      break if [1, 2].include? (self.single_or_set = single_or_set.to_i)
       prompt "Sorry, please choose option 1 or 2."
+      sleep(1)
+      clear_screen
     end
+  end
+
+  def display_instructions
+    clear_screen
+    puts
+    prompt "How to play Rock, Paper, Scissors, Lizard, Spock:
+
+   Rock, Paper, Scissors, Lizard, Spock (RPSLS) is very similar to 
+   the traditional Rock, Paper, Scissors - there are just a couple 
+   more options.
+
+   Below is a breakdown of what wins against what:
+
+     Scissors cuts paper
+     Paper covers rock
+     Rock crushes lizard
+     Lizard poisons Spock
+     Spock smashes scissors
+     Scissors decapitates lizard
+     Lizard eats paper
+     Paper disproves Spock
+     Spock vaporizes rock
+     Rock crushes scissors"
+    gets
   end
 
   def play_match
@@ -157,38 +240,25 @@ class RPSgame
   end
 
   def display_match_winner
+    puts
     prompt (match_winner ? "#{match_winner.name} wins the match!" : "It's a tie!")
   end
 
   def display_game_winner
+    puts
     prompt "#{score.key(10).name} wins the game!"
   end
 
   def play_again?
     answer = nil
     loop do
+      puts
       prompt "Do you want to play again? (yes/no)"
       answer = gets.chomp.downcase
       break if answer[0] == 'y' || answer[0] == 'n'
       prompt "Sorry, let's stick with 'yes' or 'no'."
     end
     answer.start_with? 'y'
-  end
-
-  def play
-    clear_screen
-    display_welcome_message
-    loop do
-      choose_single_or_set
-      if single_or_set == 1
-        play_match
-      else
-        play_set
-      end
-      display_game_winner unless single_or_set == 1
-      break unless play_again?
-    end
-    display_goodbye_message
   end
 end
 
