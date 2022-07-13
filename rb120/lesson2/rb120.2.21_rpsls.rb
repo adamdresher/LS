@@ -1,3 +1,6 @@
+require 'yaml'
+MESSAGES = YAML.load_file('rb120.2.21_rpsls.yml')
+
 module Viewable
   def clear_screen
     system('clear')
@@ -5,6 +8,14 @@ module Viewable
 
   def prompt(msg)
     puts "=> #{msg}"
+  end
+
+  def prompt_yml(msg)
+    puts "=> #{MESSAGES[msg]}"
+  end
+
+  def prompt_yml2(msg)
+    puts MESSAGES[msg]
   end
 end
 
@@ -83,10 +94,10 @@ class Human < Player
     loop do
       clear_screen
       puts
-      prompt "What's your name?"
+      prompt_yml 'get_name'
       self.name = gets.chomp.capitalize
       break unless name.empty?
-      prompt "Sorry, please give a name."
+      prompt_yml 'get_name2'
     end
   end
 
@@ -94,10 +105,12 @@ class Human < Player
     choice = nil
     loop do
       puts
-      prompt "Choose a move: Rock, Paper, Scissors, Lizard, or Spock"
+      prompt_yml 'choose_move'
       choice = gets.chomp.downcase
       break if Move::VALUES.include? choice
-      prompt "Sorry, wrong choice."
+      prompt_yml 'choose_move2'
+      sleep 0.5
+      clear_screen
     end
     self.move = Move.new(choice)
   end
@@ -120,7 +133,7 @@ class RPSgame
   def initialize
     @human = Human.new
     @computer = Computer.new
-    @score = { self.human => 0, self.computer => 0 }
+    @score = { human => 0, computer => 0 }
     @single_or_set = nil
   end
 
@@ -148,52 +161,41 @@ Welcome to Rock, Paper, Scissors, Lizard, Spock!"
   end
 
   def display_goodbye_message
-    prompt "Thanks for playing Rock, Paper, Scissors, Lizard, Spock!\n\
-   Goodbye"
+    prompt_yml 'goodbye'
   end
 
   def choose_single_or_set
     loop do
-      puts
-      prompt "Menu:"
-      puts "     Play a single match     (1)\
-      \n     Play first to 10 points (2)\
-      \n     How to play RPSLS       (H)"
+      display_menu
       self.single_or_set = gets.chomp.downcase
-      if self.single_or_set == 'h'
+      if single_or_set == 'h'
         display_instructions
-        clear_screen
         next
       end
-      break if [1, 2].include? (self.single_or_set = single_or_set.to_i)
-      prompt "Sorry, please choose option 1 or 2."
-      sleep(1)
-      clear_screen
+      break if [1, 2].include?(self.single_or_set = single_or_set.to_i)
+      display_menu_try_again
     end
+  end
+
+  def display_menu
+    puts
+    prompt_yml 'menu'
+    prompt_yml2 'menu2'
+  end
+
+  def display_menu_try_again
+    prompt_yml 'menu3'
+    sleep 1
+    clear_screen
   end
 
   def display_instructions
     clear_screen
     puts
-    prompt "How to play Rock, Paper, Scissors, Lizard, Spock:
-
-   Rock, Paper, Scissors, Lizard, Spock (RPSLS) is very similar to 
-   the traditional Rock, Paper, Scissors - there are just a couple 
-   more options.
-
-   Below is a breakdown of what wins against what:
-
-     Scissors cuts paper
-     Paper covers rock
-     Rock crushes lizard
-     Lizard poisons Spock
-     Spock smashes scissors
-     Scissors decapitates lizard
-     Lizard eats paper
-     Paper disproves Spock
-     Spock vaporizes rock
-     Rock crushes scissors"
+    prompt_yml 'instructions'
+    prompt_yml2 'press_enter'
     gets
+    clear_screen
   end
 
   def play_match
@@ -207,33 +209,41 @@ Welcome to Rock, Paper, Scissors, Lizard, Spock!"
   def play_set
     loop do
       play_match
-      score[match_winner] += 1 if match_winner # `+`, noMethodError for NilClass
+      score[match_winner] += 1 if match_winner
       display_score
       break if game_winner
-      sleep(2)
+      prompt_yml2 'press_enter'
+      gets
     end
   end
 
   def display_moves
-    puts "#{human.name} chose #{human.move}."
-    puts "#{computer.name} chose #{computer.move}."
+    puts
+    prompt "#{human.name} chose #{human.move}"
+    prompt "#{computer.name} chose #{computer.move}"
   end
 
   def display_score
     puts
-    prompt "#{human.name} has #{score[human]} points."
-    prompt "#{computer.name} has #{score[computer]} points."
+    prompt "#{human.name} has #{score[human]} #{format_points(human)}"
+    prompt "#{computer.name} has #{score[computer]} #{format_points(computer)}"
   end
 
+  def format_points(player)
+    score[player] == 1 ? 'point' : 'points'
+  end
+
+  # rubocop:disable Style/EmptyElse
   def match_winner
     if human.move > computer.move
-      self.human
+      human
     elsif human.move < computer.move
-      self.computer
+      computer
     else
       nil
     end
   end
+  # rubocop:enable Style/EmptyElse
 
   def game_winner
     score.any? { |_, v| v >= 10 }
@@ -241,7 +251,11 @@ Welcome to Rock, Paper, Scissors, Lizard, Spock!"
 
   def display_match_winner
     puts
-    prompt (match_winner ? "#{match_winner.name} wins the match!" : "It's a tie!")
+    prompt(if match_winner
+             "#{match_winner.name} wins the match!"
+           else
+             "It's a tie!"
+           end)
   end
 
   def display_game_winner
@@ -253,10 +267,10 @@ Welcome to Rock, Paper, Scissors, Lizard, Spock!"
     answer = nil
     loop do
       puts
-      prompt "Do you want to play again? (yes/no)"
+      prompt_yml 'play_again'
       answer = gets.chomp.downcase
       break if answer[0] == 'y' || answer[0] == 'n'
-      prompt "Sorry, let's stick with 'yes' or 'no'."
+      prompt_yml 'play_again2'
     end
     answer.start_with? 'y'
   end
