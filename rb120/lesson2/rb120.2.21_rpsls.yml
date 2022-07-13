@@ -6,7 +6,7 @@ goodbye:          "Thanks for playing Rock, Paper, Scissors, Lizard, Spock!\n   
 menu:             "Menu:"
 menu2:            "     Play a single match     (1)\n
 \_\_\_\_Play first to 10 points (2)\n     How to play RPSLS       (H)"
-menu3:            "Sorry, please choose option 1 or 2."
+menu3:            "Sorry, please choose 1, 2, or H."
 instructions:     "How to play Rock, Paper, Scissors, Lizard, Spock:\n\n
 \_\_\_Rock, Paper, Scissors, Lizard, Spock (RPSLS) is very similar to\n
 \_\_\_the traditional Rock, Paper, Scissors - there are just a couple\n
