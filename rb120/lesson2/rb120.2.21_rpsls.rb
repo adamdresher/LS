@@ -19,68 +19,88 @@ module Viewable
   end
 end
 
-class Move
-  VALUES = ['rock', 'paper', 'scissors', 'lizard', 'spock']
+module Moves
+  class Rock
+    def to_s
+      'rock'
+    end
 
-  def initialize(value)
-    @value = value.downcase == 'spock' ? value.capitalize : value
+    def >(other_move)
+      [Lizard, Scissors].include? other_move.class
+    end
+
+    def <(other_move)
+      [Paper, Spock].include? other_move.class
+    end
   end
 
-  def to_s
-    @value
+  class Paper
+    def to_s
+      'paper'
+    end
+
+    def >(other_move)
+      [Rock, Spock].include? other_move.class
+    end
+
+    def <(other_move)
+      [Scissors, Lizard].include? other_move.class
+    end
   end
 
-  def >(other_move)
-    (scissors? && other_move.paper?) ||
-      (paper? && other_move.rock?) ||
-      (rock? && other_move.lizard?) ||
-      (lizard? && other_move.spock?) ||
-      (spock? && other_move.scissors?) ||
-      (scissors? && other_move.lizard?) ||
-      (lizard? && other_move.paper?) ||
-      (paper? && other_move.spock?) ||
-      (spock? && other_move.rock?) ||
-      (rock? && other_move.scissors?)
+  class Scissors
+    def to_s
+      'scissors'
+    end
+
+    def >(other_move)
+      [Paper, Lizard].include? other_move.class
+    end
+
+    def <(other_move)
+      [Spock, Rock].include? other_move.class
+    end
   end
 
-  def <(other_move)
-    (paper? && other_move.scissors?) ||
-      (rock? && other_move.paper?) ||
-      (lizard? && other_move.rock?) ||
-      (spock? && other_move.lizard?) ||
-      (scissors? && other_move.spock?) ||
-      (lizard? && other_move.scissors?) ||
-      (paper? && other_move.lizard?) ||
-      (spock? && other_move.paper?) ||
-      (rock? && other_move.spock?) ||
-      (scissors? && other_move.rock?)
+  class Lizard
+    def to_s
+      'lizard'
+    end
+
+    def >(other_move)
+      [Paper, Spock].include? other_move.class
+    end
+
+    def <(other_move)
+      [Rock, Scissors].include? other_move.class
+    end
   end
 
-  protected
+  class Spock
+    def to_s
+      'Spock'
+    end
 
-  def rock?
-    @value == 'rock'
+    def >(other_move)
+      [Scissors, Rock].include? other_move.class
+    end
+
+    def <(other_move)
+      [Lizard, Paper].include? other_move.class
+    end
   end
 
-  def paper?
-    @value == 'paper'
-  end
-
-  def scissors?
-    @value == 'scissors'
-  end
-
-  def lizard?
-    @value == 'lizard'
-  end
-
-  def spock?
-    @value == 'Spock'
-  end
+  OPTIONS =
+    { rock: Rock,
+      paper: Paper,
+      scissors: Scissors,
+      lizard: Lizard,
+      spock: Spock }
 end
 
 class Player
   include Viewable
+  include Moves
 
   attr_accessor :move, :name
 
@@ -107,12 +127,18 @@ class Human < Player
       puts
       prompt_yml 'choose_move'
       choice = gets.chomp.downcase
-      break if Move::VALUES.include? choice
+      break if OPTIONS.key? choice.to_sym
       prompt_yml 'choose_move2'
-      sleep 0.5
-      clear_screen
+      pause_and_clear_screen
     end
-    self.move = Move.new(choice)
+    self.move = OPTIONS[choice.to_sym].new
+  end
+
+  private
+
+  def pause_and_clear_screen
+    sleep 0.5
+    clear_screen
   end
 end
 
@@ -122,7 +148,8 @@ class Computer < Player
   end
 
   def choose_move
-    self.move = Move.new(Move::VALUES.sample)
+    choice = OPTIONS[OPTIONS.keys.sample]
+    self.move = choice.new
   end
 end
 
@@ -219,8 +246,8 @@ Welcome to Rock, Paper, Scissors, Lizard, Spock!"
 
   def display_moves
     puts
-    prompt "#{human.name} chose #{human.move}"
-    prompt "#{computer.name} chose #{computer.move}"
+    prompt "#{human.name} chose #{human.move}" # check
+    prompt "#{computer.name} chose #{computer.move}" # check
   end
 
   def display_score
