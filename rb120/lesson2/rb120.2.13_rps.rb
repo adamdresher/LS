@@ -76,12 +76,26 @@ end
 
 # game engine
 class RPSgame
-  attr_accessor :human, :computer
-
   def initialize
     @human = Human.new
     @computer = Computer.new
   end
+
+  def play
+    display_welcome_message
+    loop do
+      human.choose_move
+      computer.choose_move
+      display_moves
+      display_winner
+      break unless play_again?
+    end
+    display_goodbye_message
+  end
+
+  private
+
+  attr_accessor :human, :computer
 
   def display_welcome_message
     puts
@@ -116,18 +130,6 @@ class RPSgame
       puts "Sorry, let's stick with 'yes' or 'no'."
     end
     answer.start_with? 'y'
-  end
-
-  def play
-    display_welcome_message
-    loop do
-      human.choose_move
-      computer.choose_move
-      display_moves
-      display_winner
-      break unless play_again?
-    end
-    display_goodbye_message
   end
 end
 
