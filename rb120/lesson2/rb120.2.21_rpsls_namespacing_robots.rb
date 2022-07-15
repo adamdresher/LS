@@ -146,73 +146,6 @@ class Human < Player
   end
 end
 
-module AI
-  def starting_move
-    'rock'
-  end
-
-  class R2D2
-    def to_s
-      'R2D2'
-    end
-
-    def choose_move
-      starting_move
-      # if match_num is 1, then select rock
-      # else search history_of_moves for last game's last match, then select human's move
-    end
-  end
-
-  class Data
-    def to_s
-      'Data'
-    end
-
-    def choose_move
-      starting_move
-      # if match_num is 1, then select paper
-      # else select random
-    end
-  end
-
-  class Bender
-    def to_s
-      'Bender'
-    end
-
-    def choose_move
-      starting_move
-    #   if match_num is a multiple of 3, then select random
-    #   else select previous move
-    end
-  end
-
-  class Roy_Batty
-    def to_s
-      'Roy Batty'
-    end
-
-    def choose_move
-      starting_move
-      # if match_num is 1, then select lizard
-      # else search history_of_moves for last game's last match, then find human's move and select a random losing move
-    end
-  end
-
-  class Bishop
-    def to_s
-      'Bishop'
-    end
-
-    def choose_move
-      starting_move
-      # select a random temperament and select move based on it
-    end
-  end
-
-  CHOICES = [Bender, Bishop, Data, Roy_Batty, R2D2]
-end
-
 class Computer < Player
   include AI
   attr_reader :ai_type
@@ -227,6 +160,79 @@ class Computer < Player
   #   self.move = choice.new
   # end
 end
+
+# module AI
+#    # not accessible to classes within the namespacing module
+#    # must be mixin or inherited
+#   def starting_move
+#     'rock'
+#   end
+
+  class R2D2 < Computer
+    # if this method is defined as set_name instead of to_s
+    # then, this class can inherit directly from Player and can be initialized
+    # then can mixin AI as a module with desirable behaviors
+    # can inherit from Computer, which can mixin AI and inherit from Player
+    def to_s
+      'R2D2'
+    end
+
+    def choose_move
+      starting_move
+      # if match_num is 1, then select rock
+      # else search history_of_moves for last game's last match, then select human's move
+    end
+  end
+
+  class Data < Computer
+    def to_s
+      'Data'
+    end
+
+    def choose_move
+      starting_move
+      # if match_num is 1, then select paper
+      # else select random
+    end
+  end
+
+  class Bender < Computer
+    def to_s
+      'Bender'
+    end
+
+    def choose_move
+      starting_move
+    #   if match_num is a multiple of 3, then select random
+    #   else select previous move
+    end
+  end
+
+  class Roy_Batty < Computer
+    def to_s
+      'Roy Batty'
+    end
+
+    def choose_move
+      starting_move
+      # if match_num is 1, then select lizard
+      # else search history_of_moves for last game's last match, then find human's move and select a random losing move
+    end
+  end
+
+  class Bishop < Computer
+    def to_s
+      'Bishop'
+    end
+
+    def choose_move
+      starting_move
+      # select a random temperament and select move based on it
+    end
+  end
+
+#   CHOICES = [Bender, Bishop, Data, Roy_Batty, R2D2]
+# end
 
 robot = Computer.new
 puts robot.name
