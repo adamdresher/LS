@@ -1,6 +1,3 @@
-require 'pry'
-require 'pry-byebug'
-require 'pry-gem'
 require 'yaml'
 MESSAGES = YAML.load_file('rb120.2.21_rpsls.yml')
 
@@ -149,46 +146,18 @@ class Human < Player
   end
 end
 
-################################################################################
-
-# Or should I namespace the robots in a AI module and inherit from Player/Computer?
-# - who inherits the namespaces module?
-#   - makes most logical sense for namespaced robots to inherit from Player,
-#     then have namespaced module mixin to Computer
-#     - Player then passes initialize directly to the robots before Computer
-#       - this should allow set_name to be invoked
-
 module AI
-   # not accessible to classes within the namespacing module
-   # must be mixin or inherited
-  # def starting_move
-  #   'rock'
-  # end
-
-    # if this method is defined as set_name instead of to_s
-    # then, this class can inherit directly from Player and can be initialized
-    # then can mixin AI as a module with desirable behaviors
-    # can inherit from Computer, which can mixin AI and inherit from Player
-
-# scoreboard = [[{human => human.move, computer => computer.move}, # game 1
-#                {human => human.move, computer => computer.move},
-#                {human => human.move, computer => computer.move},
-#                # ... x10 matches total
-#                {human => human.move, computer => computer.move}],
-#               [{human => human.move, computer => computer.move}], # game 2
-#               [{human => human.move, computer => computer.move}]] # game 3
-
   class Bender < Player
     def set_name
       self.name = 'Bender'
     end
 
-    def choose_move(records, computer, human)
-      if records.size - 1 % 3 == 0
-        self.move = OPTIONS[OPTIONS.keys.sample].new
-      else
-        self.move = records[-2][-1][computer]
-      end
+    def choose_move(records, computer, _)
+      self.move = if records.size - 1 % 3 == 0
+                    OPTIONS[OPTIONS.keys.sample].new
+                  else
+                    records[-2][-1][computer]
+                  end
     end
   end
 
@@ -198,12 +167,12 @@ module AI
     end
 
     def choose_move(records, computer, human)
-      if records.size == 1
-        self.move = OPTIONS[OPTIONS.keys.sample].new
-      else
-        return self.move if self.move
-        self.move = CHOICES.sample.new.choose_move(records, computer, human)
-      end
+      self.move = if records.size == 1
+                    OPTIONS[OPTIONS.keys.sample].new
+                  else
+                    return move if move
+                    CHOICES.sample.new.choose_move(records, computer, human)
+                  end
     end
   end
 
@@ -212,32 +181,36 @@ module AI
       self.name = 'Data'
     end
 
-    def choose_move(records, computer, human)
-        if records.size - 1 % 3 == 0
-          self.move = Paper.new
-        else
-          self.move = OPTIONS[OPTIONS.keys.sample].new
-        end
+    def choose_move(records, _, _)
+      self.move = if records.size - 1 % 3 == 0
+                    Paper.new
+                  else
+                    OPTIONS[OPTIONS.keys.sample].new
+                  end
     end
   end
 
-  class Roy_Batty < Player
+  class RoyBatty < Player
     def set_name
       self.name = 'Roy Batty'
     end
 
-    def choose_move(records, computer, human)
-      self.move = (if records.size -1 % 3 == 0
+    # rubocop:disable Metrics/MethodLength
+    # Metrics/MethodLength || Layout/LineLength cop
+    def choose_move(records, _, human)
+      self.move = if records.size - 1 % 3 == 0
                     Lizard.new
                   else
-                    human_move = OPTIONS[records[-2][-1][human].downcase.to_sym].new
+                    human_move = records[-2][-1][human].downcase.to_sym
+                    winning_move = OPTIONS[human_move].new
                     losing_move = nil
-                    until human_move > losing_move
+                    until winning_move > losing_move
                       losing_move = OPTIONS[OPTIONS.keys.sample].new
                     end
                     losing_move
-                  end)
+                  end
     end
+    # rubocop:enable Metrics/MethodLength
   end
 
   class R2D2 < Player
@@ -245,16 +218,16 @@ module AI
       self.name = 'R2D2'
     end
 
-    def choose_move(records, computer, human)
-      if records.size == 1
-        self.move = Rock.new
-      else
-        self.move = records[-2][-1][human]
-      end
+    def choose_move(records, _, human)
+      self.move = if records.size == 1
+                    Rock.new
+                  else
+                    records[-2][-1][human]
+                  end
     end
   end
 
-  CHOICES = [Bender, Bishop, Data, Roy_Batty, R2D2]
+  CHOICES = [Bender, Bishop, Data, RoyBatty, R2D2]
 end
 
 class Computer
@@ -262,30 +235,9 @@ class Computer
   attr_reader :ai
 
   def initialize
-    @ai = CHOICES.sample.new # production
-    # @ai = AI::Bishop.new # test
+    @ai = CHOICES.sample.new
   end
-
-  # def choose_move
-  #   choice = OPTIONS[OPTIONS.keys.sample]
-  #   self.move = choice.new
-  # end
 end
-
-
-# scoreboard = [[{:human => 'rock', :computer => 'paper'}], # game 1
-#                [{:human => 'Spock', :computer => 'rock'}, # game 2
-#                {:human => 'Spock', :computer => 'rock'},
-#                # ... x10 matches total
-#                {:human => 'Spock', :computer => 'rock'}],
-#               [{:human => 'Spock', :computer => 'paper'}], # game 3
-#               [{:human => 'paper', :computer => 'scissors'}], # game 4
-#               [{:human => 'paper', :computer => 'scissors'}], # game 5
-#               [{:human => 'Spock', :computer => 'lizard'}]] # game 6
-
-# robot = Computer.new
-# puts robot.ai.name
-# puts robot.ai.choose_move(scoreboard, :computer, :human)
 
 # game engine
 class RPSgame
@@ -466,10 +418,6 @@ class Scoreboard < RPSgame
     prompt "#{computer} has #{score[computer]} #{format_points(computer)}"
   end
 
-  def format_points(player)
-    score[player] == 1 ? 'point' : 'points'
-  end
-
   def record_move(human, computer)
     history_of_moves[-1] << { human => human.move, computer => computer.move }
   end
@@ -486,6 +434,13 @@ class Scoreboard < RPSgame
       end
     end
   end
+
+  private
+
+  def format_points(player)
+    score[player] == 1 ? 'point' : 'points'
+  end
 end
 
+# user interface
 RPSgame.new.play
