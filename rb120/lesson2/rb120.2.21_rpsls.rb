@@ -19,7 +19,7 @@ module Viewable
   end
 end
 
-module Moves
+module Moves # implementing a module creates more lines, but feels more legible
   class Rock
     def to_s
       'rock'
@@ -90,7 +90,7 @@ module Moves
     end
   end
 
-  OPTIONS =
+  OPTIONS = # classes are defined first
     { rock: Rock,
       paper: Paper,
       scissors: Scissors,
@@ -146,8 +146,10 @@ class Human < Player
   end
 end
 
-module AI
+module AI # each AI class has their own personality
   class Bender < Player
+    # starts with random move and plays the same move 3 times
+    # then repeats with new random move
     def set_name
       self.name = 'Bender'
     end
@@ -162,6 +164,7 @@ module AI
   end
 
   class Bishop < Player
+    # randomly immitates another AI
     def set_name
       self.name = 'Bishop'
     end
@@ -177,6 +180,8 @@ module AI
   end
 
   class Data < Player
+    # starts with paper
+    # then random moves
     def set_name
       self.name = 'Data'
     end
@@ -191,12 +196,14 @@ module AI
   end
 
   class RoyBatty < Player
+    # starts with lizard
+    # then chooses the losing move against the opponent's previous move
     def set_name
       self.name = 'Roy Batty'
     end
 
     # rubocop:disable Metrics/MethodLength
-    # Metrics/MethodLength || Layout/LineLength cop
+    # choice between cops: Metrics/MethodLength || Layout/LineLength
     def choose_move(records, _, human)
       self.move = if records.size - 1 % 3 == 0
                     Lizard.new
@@ -214,6 +221,8 @@ module AI
   end
 
   class R2D2 < Player
+    # starts with rock
+    # then chooses opponents previous move
     def set_name
       self.name = 'R2D2'
     end
@@ -227,6 +236,7 @@ module AI
     end
   end
 
+  # classes are defined first
   CHOICES = [Bender, Bishop, Data, RoyBatty, R2D2]
 end
 
@@ -326,7 +336,6 @@ Welcome to Rock, Paper, Scissors, Lizard, Spock!"
 
   def play_match
     clear_screen
-    # binding.pry
     human.choose_move
     computer.choose_move(scoreboard.history_of_moves, computer, human)
     scoreboard.record_move(human, computer)
