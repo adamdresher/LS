@@ -155,10 +155,10 @@ module AI # each AI class has their own personality
     end
 
     def choose_move(records, computer, _)
-      self.move = if records.size - 1 % 3 == 0
+      self.move = if records.last.size % 3 == 0
                     OPTIONS[OPTIONS.keys.sample].new
                   else
-                    records[-2][-1][computer]
+                    records.last.last[computer]
                   end
     end
   end
@@ -170,12 +170,20 @@ module AI # each AI class has their own personality
     end
 
     def choose_move(records, computer, human)
-      self.move = if records.size == 1
-                    OPTIONS[OPTIONS.keys.sample].new
+      self.move = if records.last.size == 0
+                    self.ai_immitation = choose_who_to_immitate
+                    ai_immitation.choose_move(records, computer, human)
                   else
-                    return move if move
-                    CHOICES.sample.new.choose_move(records, computer, human)
+                    ai_immitation.choose_move(records, computer, human)
                   end
+    end
+
+    private
+
+    attr_accessor :ai_immitation
+
+    def choose_who_to_immitate
+      CHOICES.sample.new
     end
   end
 
@@ -187,7 +195,7 @@ module AI # each AI class has their own personality
     end
 
     def choose_move(records, _, _)
-      self.move = if records.size - 1 % 3 == 0
+      self.move = if records.last.size == 0
                     Paper.new
                   else
                     OPTIONS[OPTIONS.keys.sample].new
@@ -205,10 +213,11 @@ module AI # each AI class has their own personality
     # rubocop:disable Metrics/MethodLength
     # choice between cops: Metrics/MethodLength || Layout/LineLength
     def choose_move(records, _, human)
-      self.move = if records.size - 1 % 3 == 0
+      self.move = if records.last.size == 0
                     Lizard.new
                   else
-                    human_move = records[-2][-1][human].downcase.to_sym
+                    # guards against Spock with a capital S
+                    human_move = records.last.last[human].to_s.downcase.to_sym
                     winning_move = OPTIONS[human_move].new
                     losing_move = nil
                     until winning_move > losing_move
@@ -228,15 +237,15 @@ module AI # each AI class has their own personality
     end
 
     def choose_move(records, _, human)
-      self.move = if records.size == 1
+      self.move = if records.last.size == 0
                     Rock.new
                   else
-                    records[-2][-1][human]
+                    records.last.last[human]
                   end
     end
   end
 
-  # classes are defined first
+  # custom classes must be defined first
   CHOICES = [Bender, Bishop, Data, RoyBatty, R2D2]
 end
 
