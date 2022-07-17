@@ -266,7 +266,7 @@ class RPSgame
   def initialize
     @human = Human.new
     @computer = Computer.new.ai
-    @scoreboard = Scoreboard.new
+    @scoreboard = Scoreboard.new(human, computer)
     @single_or_set = nil
   end
 
@@ -301,6 +301,7 @@ Welcome to Rock, Paper, Scissors, Lizard, Spock!"
 
   def setup_game
     setup_scoreboard
+    @computer = Computer.new.ai # future: let user choose ai or random
     choose_single_or_set
   end
 
@@ -417,8 +418,8 @@ class Scoreboard < RPSgame
   attr_accessor :score
   attr_reader :history_of_moves
 
-  def initialize
-    @score = { human => 0, computer => 0 }
+  def initialize(human, computer)
+    @score = { human.name => 0, computer.name => 0 }
     @history_of_moves = []
   end
 
@@ -427,7 +428,7 @@ class Scoreboard < RPSgame
   end
 
   def reset_score(human, computer)
-    self.score = { human => 0, computer => 0 }
+    self.score = { human.name => 0, computer.name => 0 }
   end
 
   def display_score(human, computer)
@@ -437,7 +438,8 @@ class Scoreboard < RPSgame
   end
 
   def record_move(human, computer)
-    history_of_moves[-1] << { human => human.move, computer => computer.move }
+    moves = { human.name => human.move, computer.name => computer.move }
+    history_of_moves[-1] << moves
   end
 
   def display_history(human, computer)
@@ -447,8 +449,10 @@ class Scoreboard < RPSgame
 
       game.each_with_index do |match, match_idx|
         prompt "Match # #{match_idx + 1}:"
-        puts "              #{human} played #{match[human]}".ljust(40) + "  " +
-             "#{computer} played #{match[computer]}".ljust(30)
+        match.each_pair do |player, move|
+          print "              #{player} played #{move}".ljust(20)
+        end
+        puts
       end
     end
   end
