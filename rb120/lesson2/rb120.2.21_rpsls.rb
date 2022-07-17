@@ -1,3 +1,5 @@
+require 'pry'
+require 'pry-byebug'
 require 'yaml'
 MESSAGES = YAML.load_file('rb120.2.21_rpsls.yml')
 
@@ -19,7 +21,90 @@ module Viewable
   end
 end
 
-module Moves # implementing a module creates more lines, but feels more legible
+module Displayable
+  def display_welcome_message(human)
+    clear_screen
+    puts
+    prompt "Hello #{human.name}.  \
+Welcome to Rock, Paper, Scissors, Lizard, Spock!"
+  end
+
+  def display_goodbye_message
+    prompt_yml 'goodbye'
+  end
+
+  def display_menu
+    puts
+    prompt_yml 'menu'
+    prompt_yml2 'menu2'
+  end
+
+  def display_menu_try_again
+    prompt_yml 'menu3'
+    sleep 1
+    clear_screen
+  end
+
+  def display_instructions
+    clear_screen
+    puts
+    prompt_yml 'instructions'
+    prompt_yml2 'press_enter'
+    gets
+    clear_screen
+  end
+
+  def display_moves(human, computer)
+    puts
+    # binding.pry
+    prompt "#{human} chose #{human.move}"
+    prompt "#{computer} chose #{computer.move}"
+  end
+
+  def display_match_winner(match_winner)
+    puts
+    prompt(if match_winner
+             "#{match_winner} wins the match!"
+           else
+             "It's a tie!"
+           end)
+  end
+
+  def display_game_winner(game_winner)
+    puts
+    prompt "#{game_winner} wins the game!"
+  end
+
+  def display_score(human, computer, scoreboard)
+    score = scoreboard.score
+    puts
+    prompt "#{human} has #{score[human.name]} #{format_points(human, scoreboard)}"
+    prompt "#{computer} has #{score[computer.name]} #{format_points(computer, scoreboard)}"
+  end
+
+  def display_history(scoreboard)
+    scoreboard.history_of_moves.each_with_index do |game, game_idx|
+      puts
+      prompt "Game # #{game_idx + 1}:"
+
+      game.each_with_index do |match, match_idx|
+        prompt "Match # #{match_idx + 1}:"
+        match.each_pair do |player, move|
+          print "              #{player} played #{move}".ljust(40)
+        end
+        puts
+      end
+    end
+  end
+
+  private
+
+  def format_points(player, scoreboard)
+    scoreboard.score[player] == 1 ? 'point' : 'points'
+  end
+end
+
+module Moves # creates more lines, but feels more legible than separate classes
   class Rock
     def to_s
       'rock'
@@ -158,7 +243,7 @@ module AI # each AI class has their own personality
       self.move = if records.last.size % 3 == 0
                     OPTIONS[OPTIONS.keys.sample].new
                   else
-                    records.last.last[computer]
+                    records.last.last[computer.name] # name should work only for Bender
                   end
     end
   end
@@ -217,7 +302,7 @@ module AI # each AI class has their own personality
                     Lizard.new
                   else
                     # guards against Spock with a capital S
-                    human_move = records.last.last[human].to_s.downcase.to_sym
+                    human_move = records.last.last[human.name].to_s.downcase.to_sym
                     winning_move = OPTIONS[human_move].new
                     losing_move = nil
                     until winning_move > losing_move
@@ -240,7 +325,7 @@ module AI # each AI class has their own personality
       self.move = if records.last.size == 0
                     Rock.new
                   else
-                    records.last.last[human]
+                    records.last.last[human.name]
                   end
     end
   end
@@ -261,6 +346,8 @@ end
 # game engine
 class RPSgame
   include Viewable
+  include Displayable
+
   attr_reader :human, :computer, :scoreboard
 
   def initialize
@@ -271,12 +358,12 @@ class RPSgame
   end
 
   def play
-    display_welcome_message
+    display_welcome_message(human)
     loop do
       setup_game
       single_or_set == 1 ? play_match : play_set
-      display_game_winner unless single_or_set == 1
-      scoreboard.display_history(human, computer) if valid?('display_history?')
+      display_game_winner(game_winner) unless single_or_set == 1
+      scoreboard.display_history(scoreboard) if valid?('display_history?')
       break unless valid?('play_again?')
       clear_screen
     end
@@ -288,20 +375,9 @@ class RPSgame
   attr_accessor :single_or_set
   attr_writer :human, :computer
 
-  def display_welcome_message
-    clear_screen
-    puts
-    prompt "Hello #{human.name}.  \
-Welcome to Rock, Paper, Scissors, Lizard, Spock!"
-  end
-
-  def display_goodbye_message
-    prompt_yml 'goodbye'
-  end
-
-  def setup_game
+  def setup_game # future: let user choose ai or random
+    @computer = Computer.new.ai unless scoreboard.score.any?(0)
     setup_scoreboard
-    @computer = Computer.new.ai # future: let user choose ai or random
     choose_single_or_set
   end
 
@@ -323,51 +399,25 @@ Welcome to Rock, Paper, Scissors, Lizard, Spock!"
     end
   end
 
-  def display_menu
-    puts
-    prompt_yml 'menu'
-    prompt_yml2 'menu2'
-  end
-
-  def display_menu_try_again
-    prompt_yml 'menu3'
-    sleep 1
-    clear_screen
-  end
-
-  def display_instructions
-    clear_screen
-    puts
-    prompt_yml 'instructions'
-    prompt_yml2 'press_enter'
-    gets
-    clear_screen
-  end
-
   def play_match
     clear_screen
     human.choose_move
     computer.choose_move(scoreboard.history_of_moves, computer, human)
     scoreboard.record_move(human, computer)
-    display_moves
-    display_match_winner
+    display_moves(human, computer)
+    display_match_winner(match_winner)
   end
 
   def play_set
     loop do
       play_match
+      # binding.pry
       scoreboard.add_point(match_winner) if match_winner
-      scoreboard.display_score(human, computer)
-      break if game_winner
+      display_score(human, computer, scoreboard)
+      break if game_winner?
       prompt_yml2 'press_enter'
       gets
     end
-  end
-
-  def display_moves
-    puts
-    prompt "#{human} chose #{human.move}"
-    prompt "#{computer} chose #{computer.move}"
   end
 
   # rubocop:disable Style/EmptyElse
@@ -383,21 +433,11 @@ Welcome to Rock, Paper, Scissors, Lizard, Spock!"
   # rubocop:enable Style/EmptyElse
 
   def game_winner
+    scoreboard.score.key(10)
+  end
+
+  def game_winner?
     scoreboard.score.any? { |_, v| v >= 10 }
-  end
-
-  def display_match_winner
-    puts
-    prompt(if match_winner
-             "#{match_winner} wins the match!"
-           else
-             "It's a tie!"
-           end)
-  end
-
-  def display_game_winner
-    puts
-    prompt "#{scoreboard.score.key(10).name} wins the game!"
   end
 
   def valid?(answer)
@@ -415,6 +455,8 @@ end
 
 class Scoreboard < RPSgame
   include Viewable
+  include Displayable
+
   attr_accessor :score
   attr_reader :history_of_moves
 
@@ -424,43 +466,16 @@ class Scoreboard < RPSgame
   end
 
   def add_point(player)
-    score[player] += 1
+    score[player.name] += 1
   end
 
   def reset_score(human, computer)
     self.score = { human.name => 0, computer.name => 0 }
   end
 
-  def display_score(human, computer)
-    puts
-    prompt "#{human} has #{score[human]} #{format_points(human)}"
-    prompt "#{computer} has #{score[computer]} #{format_points(computer)}"
-  end
-
   def record_move(human, computer)
     moves = { human.name => human.move, computer.name => computer.move }
     history_of_moves[-1] << moves
-  end
-
-  def display_history(human, computer)
-    history_of_moves.each_with_index do |game, game_idx|
-      puts
-      prompt "Game # #{game_idx + 1}:"
-
-      game.each_with_index do |match, match_idx|
-        prompt "Match # #{match_idx + 1}:"
-        match.each_pair do |player, move|
-          print "              #{player} played #{move}".ljust(20)
-        end
-        puts
-      end
-    end
-  end
-
-  private
-
-  def format_points(player)
-    score[player] == 1 ? 'point' : 'points'
   end
 end
 
