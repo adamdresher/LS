@@ -1,5 +1,3 @@
-require 'pry'
-require 'pry-byebug'
 require 'yaml'
 MESSAGES = YAML.load_file('rb120.2.21_rpsls.yml')
 
@@ -75,11 +73,17 @@ Welcome to Rock, Paper, Scissors, Lizard, Spock!"
     prompt "#{game_winner} wins the game!"
   end
 
-  def display_score(human, computer, scoreboard)
-    score = scoreboard.score
+  def display_score(human, computer, records)
+    score = records.score
     puts
-    prompt "#{human} has #{score[human.name]} #{format_points(human, scoreboard)}"
-    prompt "#{computer} has #{score[computer.name]} #{format_points(computer, scoreboard)}"
+    prompt "#{human} has #{score[human.name]} #{format_points(human, records)}"
+    prompt "#{computer} has #{score[computer.name]} \
+#{format_points(computer, records)}"
+  end
+
+  def display_winner_and_history(scoreboard)
+    display_game_winner(game_winner) unless single_or_set == 1
+    scoreboard.display_history(scoreboard) if valid?('display_history?')
   end
 
   def display_history(scoreboard)
@@ -87,17 +91,22 @@ Welcome to Rock, Paper, Scissors, Lizard, Spock!"
       puts
       prompt "Game # #{game_idx + 1}:"
 
-      game.each_with_index do |match, match_idx|
-        prompt "Match # #{match_idx + 1}:"
-        match.each_pair do |player, move|
-          print "              #{player} played #{move}".ljust(40)
-        end
-        puts
-      end
+      display_game_history(game)
     end
   end
 
   private
+
+  def display_game_history(game)
+    game.each_with_index do |match, match_idx|
+      prompt "Match # #{match_idx + 1}:"
+
+      match.each_pair do |player, move|
+        print "              #{player} played #{move}".ljust(40)
+      end
+      puts
+    end
+  end
 
   def format_points(player, scoreboard)
     scoreboard.score[player] == 1 ? 'point' : 'points'
@@ -243,7 +252,7 @@ module AI # each AI class has their own personality
       self.move = if records.last.size % 3 == 0
                     OPTIONS[OPTIONS.keys.sample].new
                   else
-                    records.last.last[computer.name] # name should work only for Bender
+                    records.last.last[computer.name]
                   end
     end
   end
@@ -255,12 +264,8 @@ module AI # each AI class has their own personality
     end
 
     def choose_move(records, computer, human)
-      self.move = if records.last.size == 0
-                    self.ai_immitation = choose_who_to_immitate
-                    ai_immitation.choose_move(records, computer, human)
-                  else
-                    ai_immitation.choose_move(records, computer, human)
-                  end
+      self.ai_immitation = choose_who_to_immitate if records.last.size.zero?
+      self.move = ai_immitation.choose_move(records, computer, human)
     end
 
     private
@@ -280,7 +285,7 @@ module AI # each AI class has their own personality
     end
 
     def choose_move(records, _, _)
-      self.move = if records.last.size == 0
+      self.move = if records.last.size.zero?
                     Paper.new
                   else
                     OPTIONS[OPTIONS.keys.sample].new
@@ -295,23 +300,26 @@ module AI # each AI class has their own personality
       self.name = 'Roy Batty'
     end
 
-    # rubocop:disable Metrics/MethodLength
-    # choice between cops: Metrics/MethodLength || Layout/LineLength
     def choose_move(records, _, human)
-      self.move = if records.last.size == 0
+      self.move = if records.last.size.zero?
                     Lizard.new
                   else
-                    # guards against Spock with a capital S
-                    human_move = records.last.last[human.name].to_s.downcase.to_sym
-                    winning_move = OPTIONS[human_move].new
-                    losing_move = nil
-                    until winning_move > losing_move
-                      losing_move = OPTIONS[OPTIONS.keys.sample].new
-                    end
-                    losing_move
+                    choose_previous_losing_move(records, human)
                   end
     end
-    # rubocop:enable Metrics/MethodLength
+
+    private
+
+    def choose_previous_losing_move(records, human)
+      # guards against Spock with a capital S
+      human_move = records.last.last[human.name].to_s.downcase.to_sym
+      winning_move = OPTIONS[human_move].new
+      losing_move = nil
+      until winning_move > losing_move
+        losing_move = OPTIONS[OPTIONS.keys.sample].new
+      end
+      losing_move
+    end
   end
 
   class R2D2 < Player
@@ -322,7 +330,7 @@ module AI # each AI class has their own personality
     end
 
     def choose_move(records, _, human)
-      self.move = if records.last.size == 0
+      self.move = if records.last.size.zero?
                     Rock.new
                   else
                     records.last.last[human.name]
@@ -361,9 +369,8 @@ class RPSgame
     display_welcome_message(human)
     loop do
       setup_game
-      single_or_set == 1 ? play_match : play_set
-      display_game_winner(game_winner) unless single_or_set == 1
-      scoreboard.display_history(scoreboard) if valid?('display_history?')
+      play_game_match_or_set
+      display_winner_and_history(scoreboard)
       break unless valid?('play_again?')
       clear_screen
     end
@@ -384,6 +391,10 @@ class RPSgame
   def setup_scoreboard
     scoreboard.history_of_moves << []
     scoreboard.reset_score(human, computer)
+  end
+
+  def play_game_match_or_set
+    single_or_set == 1 ? play_match : play_set
   end
 
   def choose_single_or_set
@@ -411,7 +422,6 @@ class RPSgame
   def play_set
     loop do
       play_match
-      # binding.pry
       scoreboard.add_point(match_winner) if match_winner
       display_score(human, computer, scoreboard)
       break if game_winner?
