@@ -1,5 +1,3 @@
-require 'pry'
-
 class Board
   WINNING_LINES = [[1, 2, 3], [4, 5, 6], [7, 8, 9], # rows
                    [1, 4, 7], [2, 5 ,8], [3, 6, 9], # columns
@@ -8,20 +6,6 @@ class Board
   def initialize
     @squares = {}
     reset
-  end
-
-  def draw
-    puts "     |     |"
-    puts "  #{@squares[1]}  |  #{@squares[2]}  |  #{@squares[3]}"
-    puts "     |     |"
-    puts "-----------------"
-    puts "     |     |"
-    puts "  #{@squares[4]}  |  #{@squares[5]}  |  #{@squares[6]}"
-    puts "     |     |"
-    puts "-----------------"
-    puts "     |     |"
-    puts "  #{@squares[7]}  |  #{@squares[8]}  |  #{@squares[9]}"
-    puts "     |     |"
   end
 
   def []=(key, marker)
@@ -40,15 +24,12 @@ class Board
     !!winning_marker
   end
 
-  def all_same_marker?(squares)
-    squares.map(&:marker).uniq.size == 1
-  end
-
   def winning_marker # returns winning marker or nil
     WINNING_LINES.each do |line|
       squares = @squares.values_at(*line)
 
-      if all_same_marker?(squares) && !squares.first.unmarked?
+      if !squares.first.unmarked? && all_same_marker?(squares)
+      # if three_identical_markers?(squares)
         return squares.first.marker
       end
     end
@@ -58,6 +39,30 @@ class Board
   def reset
     (1..9).each { |num| @squares[num] = Square.new }
   end
+
+  def draw
+    puts "     |     |"
+    puts "  #{@squares[1]}  |  #{@squares[2]}  |  #{@squares[3]}"
+    puts "     |     |"
+    puts "-----------------"
+    puts "     |     |"
+    puts "  #{@squares[4]}  |  #{@squares[5]}  |  #{@squares[6]}"
+    puts "     |     |"
+    puts "-----------------"
+    puts "     |     |"
+    puts "  #{@squares[7]}  |  #{@squares[8]}  |  #{@squares[9]}"
+    puts "     |     |"
+  end
+
+  def all_same_marker?(squares)
+    squares.map(&:marker).uniq.size == 1
+  end
+
+  # def three_identical_markers?(squares)
+  #   markers = squares.reject(&:unmarked?).map(&:marker)
+  #   return false if markers.size != 3
+  #   markers.min == markers.max
+  # end
 end
 
 class Square
@@ -89,14 +94,41 @@ end
 class TTTGame
   HUMAN_MARKER = 'X'
   COMPUTER_MARKER = 'O'
+  FIRST_TO_PLAY = HUMAN_MARKER # resolving human_moves_next?
 
+  attr_accessor :current_player
   attr_reader :board, :human, :computer
 
   def initialize
     @board = Board.new
     @human = Player.new(HUMAN_MARKER)
     @computer = Player.new(COMPUTER_MARKER)
+    @current_player = human
   end
+
+  def play
+    display_greeting_message
+
+    loop do
+      display_board
+
+      loop do
+        current_player_moves
+        break if board.someone_won? || board.full?
+        # clear_screen_and_display_board if human_moves_next? # legible, but difficult to change first player without diving deeper checking for dependent methods
+        clear_screen_and_display_board
+      end
+
+      display_result
+      break unless play_again?
+      reset
+      display_play_again_message
+    end
+
+    display_goodbye_message
+  end
+
+  private
 
   def clear
     system 'clear'
@@ -108,7 +140,7 @@ class TTTGame
     puts
   end
 
-  def display_goodbye
+  def display_goodbye_message
     puts "Thanks for playing!  Goodbye!"
   end
 
@@ -136,6 +168,7 @@ class TTTGame
   def human_moves
     square = nil
     puts "Choose a square (#{board.unmarked_keys.join(', ')}):"
+
     loop do
       square = gets.chomp.to_i
       break if board.unmarked_keys.include?(square)
@@ -149,6 +182,21 @@ class TTTGame
   def computer_moves
     board[board.unmarked_keys.sample] = computer.marker
   end
+
+  def current_player_moves
+    # human_moves_next? ? human_moves : computer_moves # resolving FIRST_TO_PLAY
+    if current_player == human
+      human_moves
+      self.current_player = computer
+    else
+      computer_moves
+      self.current_player = human
+    end
+  end
+
+  # def human_moves_next? # legible, however not quite ideal if the first player is ever to be changed
+  #   board.unmarked_keys.size.odd?
+  # end
 
   def play_again?
     answer = nil
@@ -165,32 +213,12 @@ class TTTGame
   def reset
     board.reset
     clear
+    current_player = human
   end
 
   def display_play_again_message
     puts "Okay.  Let's play again!"
     puts
-  end
-
-  def play
-    display_greeting_message
-
-    loop do
-      display_board
-      loop do
-        human_moves
-        break if board.someone_won? || board.full?
-        computer_moves
-        break if board.someone_won? || board.full?
-        clear_screen_and_display_board
-      end
-      display_result
-      break unless play_again?
-      reset
-      display_play_again_message
-    end
-
-    display_goodbye
   end
 end
 
