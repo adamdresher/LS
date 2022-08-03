@@ -1,6 +1,6 @@
 class Board
   WINNING_LINES = [[1, 2, 3], [4, 5, 6], [7, 8, 9], # rows
-                   [1, 4, 7], [2, 5 ,8], [3, 6, 9], # columns
+                   [1, 4, 7], [2, 5, 8], [3, 6, 9], # columns
                    [1, 5, 9], [3, 5, 7]]            # diagonals
 
   def initialize
@@ -28,8 +28,7 @@ class Board
     WINNING_LINES.each do |line|
       squares = @squares.values_at(*line)
 
-      if !squares.first.unmarked? && all_same_marker?(squares)
-      # if three_identical_markers?(squares)
+      if !squares.first.unmarked? && all_markers_match?(squares)
         return squares.first.marker
       end
     end
@@ -40,6 +39,8 @@ class Board
     (1..9).each { |num| @squares[num] = Square.new }
   end
 
+  # rubocop:disable Metrics/AbcSize
+  # rubocop:disable Metrics/MethodLength
   def draw
     puts "     |     |"
     puts "  #{@squares[1]}  |  #{@squares[2]}  |  #{@squares[3]}"
@@ -53,16 +54,12 @@ class Board
     puts "  #{@squares[7]}  |  #{@squares[8]}  |  #{@squares[9]}"
     puts "     |     |"
   end
+  # rubocop:enable Metrics/AbcSize
+  # rubocop:enable Metrics/MethodLength
 
-  def all_same_marker?(squares)
+  def all_markers_match?(squares)
     squares.map(&:marker).uniq.size == 1
   end
-
-  # def three_identical_markers?(squares)
-  #   markers = squares.reject(&:unmarked?).map(&:marker)
-  #   return false if markers.size != 3
-  #   markers.min == markers.max
-  # end
 end
 
 class Square
@@ -108,23 +105,7 @@ class TTTGame
 
   def play
     display_greeting_message
-
-    loop do
-      display_board
-
-      loop do
-        current_player_moves
-        break if board.someone_won? || board.full?
-        # clear_screen_and_display_board if human_moves_next? # legible, but difficult to change first player without diving deeper checking for dependent methods
-        clear_screen_and_display_board
-      end
-
-      display_result
-      break unless play_again?
-      reset
-      display_play_again_message
-    end
-
+    play_game
     display_goodbye_message
   end
 
@@ -165,6 +146,19 @@ class TTTGame
          end
   end
 
+  def display_play_again_message
+    puts "Okay.  Let's play again!"
+    puts
+  end
+
+  def players_move
+    loop do
+      current_player_moves
+      break if board.someone_won? || board.full?
+      clear_screen_and_display_board
+    end
+  end
+
   def human_moves
     square = nil
     puts "Choose a square (#{board.unmarked_keys.join(', ')}):"
@@ -176,7 +170,6 @@ class TTTGame
     end
 
     board[square] = human.marker
-    # @human.mark(square) # another valid approach
   end
 
   def computer_moves
@@ -184,7 +177,6 @@ class TTTGame
   end
 
   def current_player_moves
-    # human_moves_next? ? human_moves : computer_moves # resolving FIRST_TO_PLAY
     if current_player == human
       human_moves
       self.current_player = computer
@@ -194,12 +186,20 @@ class TTTGame
     end
   end
 
-  # def human_moves_next? # legible, however not quite ideal if the first player is ever to be changed
-  #   board.unmarked_keys.size.odd?
-  # end
+  def play_game
+    loop do
+      display_board
+      players_move
+      display_result
+      break unless play_again?
+      reset
+      display_play_again_message
+    end
+  end
 
   def play_again?
     answer = nil
+
     loop do
       puts "Would you like to play again? (y / n)"
       answer = gets.chomp.downcase
@@ -213,12 +213,7 @@ class TTTGame
   def reset
     board.reset
     clear
-    current_player = human
-  end
-
-  def display_play_again_message
-    puts "Okay.  Let's play again!"
-    puts
+    self.current_player = human
   end
 end
 
