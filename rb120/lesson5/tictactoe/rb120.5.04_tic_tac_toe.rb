@@ -41,19 +41,14 @@ class Board
   end
 
   def all_same_marker?(squares)
-    # squares[0].marker == squares[1].marker &&
-    # squares[0].marker == squares[2].marker
     squares.map(&:marker).uniq.size == 1
-  end
-
-  def empty_marker?(square)
-    square.marker == ' '
   end
 
   def winning_marker # returns winning marker or nil
     WINNING_LINES.each do |line|
       squares = @squares.values_at(*line)
-      if all_same_marker?(squares) && !empty_marker?(squares.first)
+
+      if all_same_marker?(squares) && !squares.first.unmarked?
         return squares.first.marker
       end
     end
