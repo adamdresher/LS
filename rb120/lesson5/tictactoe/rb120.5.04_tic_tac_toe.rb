@@ -40,29 +40,21 @@ class Board
     !!winning_marker
   end
 
-  # def count_human_marker(squares)
-  #   squares.collect(&:marker).count(TTTGame::HUMAN_MARKER)
-  # end
+  def all_same_marker?(squares)
+    # squares[0].marker == squares[1].marker &&
+    # squares[0].marker == squares[2].marker
+    squares.map(&:marker).uniq.size == 1
+  end
 
-  # def count_computer_marker(squares)
-  #   squares.collect(&:marker).count(TTTGame::COMPUTER_MARKER)
-  # end
-
-  def count_marker(squares)
-    squares.select { |square| square.marker != ' ' }.count # non empty squares
-    # check if squares have the same marker
+  def empty_marker?(square)
+    square.marker == ' '
   end
 
   def winning_marker # returns winning marker or nil
     WINNING_LINES.each do |line|
-      binding.pry
-      # if count_human_marker(@squares.values_at(*line)) == 3
-      #   return TTTGame::HUMAN_MARKER
-      # elsif count_computer_marker(@squares.values_at(*line)) == 3
-      #   return TTTGame::COMPUTER_MARKER
-      # end
-      if count_marker(@squares.values_at(*line)) == 3 
-        return @squares[line.first].marker
+      squares = @squares.values_at(*line)
+      if all_same_marker?(squares) && !empty_marker?(squares.first)
+        return squares.first.marker
       end
     end
     nil
