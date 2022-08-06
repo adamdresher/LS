@@ -86,32 +86,28 @@ class Square
 end
 
 class Player
-  attr_reader :marker
-
-  def initialize(marker)
-    @marker = marker
-  end
+  attr_accessor :name, :marker
 end
 
 class TTTGame
-  HUMAN_MARKER = 'X'
-  COMPUTER_MARKER = 'O'
-  FIRST_TO_PLAY = HUMAN_MARKER
+  # HUMAN_MARKER = 'X'
+  # COMPUTER_MARKER = 'O'
+  COMPUTER_NAMES = ['Bender', 'Bishop', 'Data', 'R2D2', 'Roy Batty']
 
   attr_accessor :current_player, :score
   attr_reader :board, :human, :computer
 
   def initialize
     @board = Board.new
-    @human = Player.new(HUMAN_MARKER)
-    @computer = Player.new(COMPUTER_MARKER)
+    @human = Player.new
+    @computer = Player.new
     @current_player = human
     @score = { human => 0, computer => 0 }
   end
 
   def play
     display_greeting_message
-    gets
+    setup_players
     play_game
     display_goodbye_message
   end
@@ -131,6 +127,34 @@ class TTTGame
 
   def display_goodbye_message
     puts "Thanks for playing!  Goodbye!"
+  end
+
+  def setup_players
+    get_human_name
+    puts
+    get_human_marker
+    set_computer_name_and_marker
+  end
+
+  def get_human_name
+    puts "Please enter your name:"
+    human.name = gets.chomp.capitalize
+  end
+
+  def get_human_marker
+    puts "Thanks, #{human.name}."
+    loop do
+      puts "Which marker would you like to play as?  (X or O)"
+      user_marker = gets.chomp.upcase
+      human.marker = user_marker
+      break if ['X', 'O'].include? user_marker
+      puts "Sorry, that's not a marker.  Please try again."
+    end
+  end
+
+  def set_computer_name_and_marker
+    computer.name = COMPUTER_NAMES.sample
+    computer.marker = ['X', 'O'].reject { |option| option == human.marker }.first
   end
 
   def play_game
@@ -156,7 +180,7 @@ class TTTGame
   end
 
   def scoreboard
-    "\n          You       Computer\n\n\
+    "\n          #{human.name}       #{computer.name}\n\n\
 ----------------------------------------------\n\n\
   Score:   #{score[human]}           #{score[computer]}\n\n\
   Marker:  #{human.marker}           #{computer.marker}\n"
@@ -185,7 +209,6 @@ class TTTGame
   end
 
   def current_player_moves
-    # binding.pry
     if current_player == human
       human_moves
       self.current_player = computer
@@ -218,7 +241,6 @@ class TTTGame
     end
   end
 
-  # design choices for lines 198 - 252 should be reconsidered
   def computer_moves
     if computer_can_win?
       computer_moves_offensive
@@ -270,8 +292,8 @@ class TTTGame
 
   def add_point_to_winner
     winner = case board.winning_marker
-             when HUMAN_MARKER    then human
-             when COMPUTER_MARKER then computer
+             when human.marker    then human
+             when computer.marker then computer
              else
              end
     score[winner] += 1 if winner
@@ -293,7 +315,7 @@ class TTTGame
   def reset
     board.reset
     # clear
-    self.current_player = human
+    # self.current_player = human
   end
 end
 
