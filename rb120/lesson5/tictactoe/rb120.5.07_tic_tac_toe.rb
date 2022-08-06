@@ -1,3 +1,6 @@
+require 'pry'
+require 'pry-byebug'
+
 class Board
   WINNING_LINES = [[1, 2, 3], [4, 5, 6], [7, 8, 9], # rows
                    [1, 4, 7], [2, 5, 8], [3, 6, 9], # columns
@@ -93,7 +96,7 @@ end
 class TTTGame
   HUMAN_MARKER = 'X'
   COMPUTER_MARKER = 'O'
-  FIRST_TO_PLAY = HUMAN_MARKER # resolving human_moves_next?
+  FIRST_TO_PLAY = HUMAN_MARKER
 
   attr_accessor :current_player, :score
   attr_reader :board, :human, :computer
@@ -103,8 +106,6 @@ class TTTGame
     @human = Player.new(HUMAN_MARKER)
     @computer = Player.new(COMPUTER_MARKER)
     @current_player = human
-    # @human_score = 0
-    # @computer_score = 0
     @score = { human => 0, computer => 0 }
   end
 
@@ -130,6 +131,18 @@ class TTTGame
 
   def display_goodbye_message
     puts "Thanks for playing!  Goodbye!"
+  end
+
+  def play_game
+    loop do
+      clear_screen_and_display_board
+      players_move
+      add_point_to_winner
+      display_result
+      break unless play_again?
+      reset
+      display_play_again_message
+    end
   end
 
   def clear_screen_and_display_board
@@ -163,21 +176,22 @@ class TTTGame
     puts
   end
 
-  def remaining_squares
-    squares = board.unmarked_keys
-
-    if squares.size > 2
-      "#{squares[0...-1].join(', ')} or #{squares.last.to_s}"
-    else
-      squares.join(' or ')
-    end
-  end
-
   def players_move
     loop do
       current_player_moves
       clear_screen_and_display_board
       break if board.someone_won? || board.full?
+    end
+  end
+
+  def current_player_moves
+    # binding.pry
+    if current_player == human
+      human_moves
+      self.current_player = computer
+    else
+      computer_moves
+      self.current_player = human
     end
   end
 
@@ -194,92 +208,73 @@ class TTTGame
     board[square] = human.marker
   end
 
+  def remaining_squares
+    squares = board.unmarked_keys
+
+    if squares.size > 2
+      "#{squares[0...-1].join(', ')} or #{squares.last.to_s}"
+    else
+      squares.join(' or ')
+    end
+  end
+
   # design choices for lines 198 - 252 should be reconsidered
   def computer_moves
-    # board[board.unmarked_keys.sample] = computer.marker
-
     if computer_can_win?
-      computer.moves_offensively
+      computer_moves_offensive
     elsif computer_can_defend?
-      computer.moves_defensively
+      computer_moves_defensively
     else
       board[board.unmarked_keys.sample] = computer.marker
     end
   end
 
-  def computer_can_defend? # not functioning correctly
-    Board::WINNING_LINES.each do |line|
-      squares = board.squares.values_at(*line)
-      if squares.count(HUMAN_MARKER) == 2 && squares.count(COMPUTER_MARKER) == 1
-        return true
-      end
-    end
-    false
-  end
-
-  # computer ai: defense
-  # recognize 2 squares marked by opponent and defend
-  def moves_defensively # not functioning correctly
-    Board::WINNING_LINES.each do |line|
-      squares = board.squares.values_at(*line)
-      if squares.count(HUMAN_MARKER) == 2 && squares.count(COMPUTER_MARKER) == 1
-        square = select_empty_square(line)
-        board[square] = computer.marker
-      end
-    end
-  end
-
-  def computer_can_win? # not functioning correctly
-    Board::WINNING_LINES.each do |line|
-      squares = board.squares.values_at(*line)
-      if squares.count(COMPUTER_MARKER) == 2 && squares.count(HUMAN_MARKER) == 1
-        return true
-      end
-    end
-    false
+  def computer_can_win?
+    player_has_two_squares?(computer)
   end
 
   # computer ai: offense
   # recognize 2 squares marked by self and attack
-  def moves_offensively # not functioning correctly
+  def computer_moves_offensive
+    square = winnable_line(computer)
+    board[square] = computer.marker
+  end
+
+  def computer_can_defend?
+    player_has_two_squares?(human)
+  end
+
+  # computer ai: defense
+  # recognize 2 squares marked by opponent and defend
+  def computer_moves_defensively
+    square = winnable_line(human)
+    board[square] = computer.marker
+  end
+
+  def player_has_two_squares?(player)
+    winnable_line(player).class == Integer
+  end
+
+  def winnable_line(player) # returns a Square if winnable line found, or Array if not found
     Board::WINNING_LINES.each do |line|
-      squares = board.squares.values_at(*line)
-      if squares.count(COMPUTER_MARKER) == 2 && squares.count(HUMAN_MARKER) == 1
-        square = select_empty_square(line)
-        board[square] = computer.marker
+      squares = board.squares.values_at(*line).map(&:marker)
+      if squares.count(player.marker) == 2 && squares.count(Square::INITIAL_MARKER) == 1
+        return select_empty_square(line)
       end
     end
   end
 
-  def select_empty_square(squares)
-    squares.min
-  end
-
-  def current_player_moves
-    if current_player == human
-      human_moves
-      self.current_player = computer
-    else
-      computer_moves
-      self.current_player = human
-    end
-  end
-
-  def play_game
-    loop do
-      clear_screen_and_display_board
-      players_move
-      add_point_to_winner
-      display_result
-      break unless play_again?
-      reset
-      display_play_again_message
-    end
+  def select_empty_square(squares) # returns an integer
+    squares.select { |square| board.squares[square].marker == Square::INITIAL_MARKER }.first
   end
 
   def add_point_to_winner
-    winner = (board.winning_marker == HUMAN_MARKER) ? human : computer
-    score[winner] += 1
+    winner = case board.winning_marker
+             when HUMAN_MARKER    then human
+             when COMPUTER_MARKER then computer
+             else
+             end
+    score[winner] += 1 if winner
   end
 
   def play_again?
