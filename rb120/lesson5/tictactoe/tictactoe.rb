@@ -75,6 +75,11 @@ class Board
   def all_markers_match?(squares)
     squares.map(&:marker).uniq.size == 1
   end
+
+  def set_help
+    (1..9).each { |num| @squares[num] = num }
+    self
+  end
 end
 
 class Square
@@ -103,15 +108,16 @@ class TTTGame
   include Displayable
 
   COMPUTER_NAMES = ['Bender', 'Bishop', 'Data', 'R2D2', 'Roy Batty']
+  HELP_BOARD = Board.new.set_help
 
-  attr_accessor :current_player, :score
+  attr_accessor :current_player, :score, :first_to_play
   attr_reader :board, :human, :computer
 
   def initialize
     @board = Board.new
     @human = Player.new
     @computer = Player.new
-    @current_player = human
+    @first_to_play = nil
     @score = { human => 0, computer => 0 }
   end
 
@@ -129,38 +135,71 @@ class TTTGame
     puts "\n\n\n\n\n\n"
     puts "          Welcome to Tic Tac Toe!"
     puts
-  end
-
-  def display_goodbye_message
-    puts "Thanks for playing!  Goodbye!"
+    puts
+    puts "          Press (Enter) to begin."
+    gets
   end
 
   def setup_players
+    clear
+    puts
+    set_computer_name
     get_human_name
     puts
     get_human_marker
-    set_computer_name_and_marker
+    set_computer_marker
+    puts
+    decide_who_starts
+  end
+
+  def set_computer_name
+    computer.name = COMPUTER_NAMES.sample
   end
 
   def get_human_name
-    puts "Please enter your name:"
-    human.name = gets.chomp.capitalize
-  end
-
-  def get_human_marker
-    puts "Thanks, #{human.name}."
     loop do
-      puts "Which marker would you like to play as?  (X or O)"
-      user_marker = gets.chomp.upcase
-      human.marker = user_marker
-      break if ['X', 'O'].include? user_marker
-      puts "Sorry, that's not a marker.  Please try again."
+    prompt "Please enter your name:"
+    human.name = gets.chomp.capitalize
+    break unless human.name.empty?
+    prompt "Sorry, that's an invalid entry."
     end
   end
 
-  def set_computer_name_and_marker
-    computer.name = COMPUTER_NAMES.sample
-    computer.marker = ['X', 'O'].reject { |option| option == human.marker }.first
+  def get_human_marker
+    prompt "Thanks #{human.name}.  You'll be playing against #{computer.name}."
+    loop do
+      prompt "Which marker would you like to play as?  (X or O)"
+      user_marker = gets.chomp.upcase
+      human.marker = user_marker
+      break if ['X', 'O'].include? user_marker
+      prompt "Sorry, that's not a marker.  Please try again."
+    end
+  end
+
+  def set_computer_marker
+    options = ['X', 'O']
+    computer.marker = options.reject { |option| option == human.marker }.first
+  end
+
+  def decide_who_starts
+    choice = nil
+    prompt "Now let's figure out who starts."
+
+    loop do
+      puts "     Press (1) to start."
+      puts "     Press (2) to let the #{computer.name} start."
+      puts "     Press (3) to leave it up to chance."
+      choice = gets.chomp
+      break if %(1 2 3).include? choice
+      prompt "Sorry, that's an invalid choice.  Please try again."
+    end
+
+    self.first_to_play = case choice
+                         when '1' then human # not playing human
+                         when '2' then computer
+                         when '3' then [human, computer].sample
+                         end
+    self.current_player = first_to_play
   end
 
   def play_game
@@ -177,33 +216,59 @@ class TTTGame
 
   def clear_screen_and_display_board
     clear
-    puts scoreboard
-    puts
-    puts "----------------------------------------------"
-    puts
+    puts help
+    display_scoreboard
     board.draw
     puts
   end
 
+  def help
+    "Press (H) for help identifying the square #."
+  end
+
+  def display_help # helps user identify square numbers
+    clear
+    puts
+    display_scoreboard
+    HELP_BOARD.draw
+    puts
+    puts "          Press (Enter) to begin."
+    gets
+    clear_screen_and_display_board
+  end
+
+  def display_scoreboard
+    puts horizontal_line
+    puts scoreboard
+    puts
+    puts horizontal_line
+    puts
+  end
+       
   def scoreboard
     "\n          #{human.name}       #{computer.name}\n\n\
-----------------------------------------------\n\n\
-  Score:   #{score[human]}           #{score[computer]}\n\n\
-  Marker:  #{human.marker}           #{computer.marker}\n"
+#{horizontal_line}\n\n\
+  Score:   #{score[human]}#{name_padding}#{score[computer]}\n\n\
+  Marker:  #{human.marker}#{name_padding}#{computer.marker}\n"
   end
 
   def display_result
     clear_screen_and_display_board
-    puts case board.winning_marker
+    prompt case board.winning_marker
          when human.marker    then "You win!"
          when computer.marker then "The computer has won!"
          else                      "It's a tie."
          end
   end
 
-  def display_play_again_message
-    puts "Okay.  Let's play again!"
-    puts
+  def horizontal_line # corrects for long names
+    names_length = human.name.size + computer.name.size + 20
+    
+    '-' * [50, names_length].max
+  end
+
+  def name_padding # corrects for long names
+    ' ' * (human.name.size + 7)
   end
 
   def players_move
@@ -226,15 +291,19 @@ class TTTGame
 
   def human_moves
     square = nil
-    puts "Choose a square (#{remaining_squares}):"
 
     loop do
-      square = gets.chomp.to_i
-      break if board.unmarked_keys.include?(square)
-      puts "Sorry, that's not a valid choice."
+      prompt "Choose a square (#{remaining_squares}):"
+      square = gets.chomp.upcase
+      if square.start_with? 'H'
+        display_help
+        next
+      end
+      break if board.unmarked_keys.include?(square.to_i)
+      prompt "Sorry, that's not a valid choice."
     end
 
-    board[square] = human.marker
+    board[square.to_i] = human.marker
   end
 
   def remaining_squares
@@ -261,10 +330,8 @@ class TTTGame
     player_has_two_squares?(computer)
   end
 
-  # computer ai: offense
-  # recognize 2 squares marked by self and attack
-  def computer_moves_offensive
-    square = winnable_line(computer)
+  def computer_moves_offensive # recognize 2 squares marked by self
+    square = winning_square_num(computer)
     board[square] = computer.marker
   end
 
@@ -272,18 +339,16 @@ class TTTGame
     player_has_two_squares?(human)
   end
 
-  # computer ai: defense
-  # recognize 2 squares marked by opponent and defend
-  def computer_moves_defensively
-    square = winnable_line(human)
+  def computer_moves_defensively # recognize 2 squares marked by opponent
+    square = winning_square_num(human)
     board[square] = computer.marker
   end
 
   def player_has_two_squares?(player)
-    winnable_line(player).class == Integer
+    winning_square_num(player).class == Integer
   end
 
-  def winnable_line(player) # returns a Square if winnable line found, or Array if not found
+  def winning_square_num(player)
     Board::WINNING_LINES.each do |line|
       squares = board.squares.values_at(*line).map(&:marker)
       if squares.count(player.marker) == 2 && squares.count(Square::INITIAL_MARKER) == 1
@@ -292,7 +357,7 @@ class TTTGame
     end
   end
 
-  def select_empty_square(squares) # returns an integer
+  def select_empty_square(squares)
     squares.select { |square| board.squares[square].unmarked? }.first
   end
 
@@ -309,19 +374,27 @@ class TTTGame
     answer = nil
 
     loop do
-      puts "Would you like to play again? (y / n)"
-      answer = gets.chomp.downcase
-      break if %(y n).include? answer[0]
-      puts "Sorry, I didn't understand that.  Can you rephrase that?"
+      prompt "Would you like to play again? (Y / N)"
+      answer = gets.chomp.upcase
+      break if %(Y N).include? answer[0]
+      prompt "Sorry, I didn't understand that.  Can you rephrase that?"
     end
 
-    answer.start_with? 'y'
+    answer.start_with? 'Y'
+  end
+
+  def display_play_again_message
+    prompt "Okay.  Let's play again!"
+    sleep 1
   end
 
   def reset
     board.reset
-    # clear
-    # self.current_player = human
+    self.current_player = first_to_play
+  end
+
+  def display_goodbye_message
+    prompt "Thanks for playing!  Goodbye!"
   end
 end
 
