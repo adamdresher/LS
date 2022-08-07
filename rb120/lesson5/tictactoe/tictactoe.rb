@@ -1,6 +1,16 @@
 require 'pry'
 require 'pry-byebug'
 
+module Displayable
+  def clear
+    system 'clear'
+  end
+  
+  def prompt(msg)
+    puts "=> #{msg}"
+  end
+end
+
 class Board
   WINNING_LINES = [[1, 2, 3], [4, 5, 6], [7, 8, 9], # rows
                    [1, 4, 7], [2, 5, 8], [3, 6, 9], # columns
@@ -90,8 +100,8 @@ class Player
 end
 
 class TTTGame
-  # HUMAN_MARKER = 'X'
-  # COMPUTER_MARKER = 'O'
+  include Displayable
+
   COMPUTER_NAMES = ['Bender', 'Bishop', 'Data', 'R2D2', 'Roy Batty']
 
   attr_accessor :current_player, :score
@@ -113,10 +123,6 @@ class TTTGame
   end
 
   private
-
-  def clear
-    system 'clear'
-  end
 
   def display_greeting_message
     clear
@@ -287,7 +293,7 @@ class TTTGame
   end
 
   def select_empty_square(squares) # returns an integer
-    squares.select { |square| board.squares[square].marker == Square::INITIAL_MARKER }.first
+    squares.select { |square| board.squares[square].unmarked? }.first
   end
 
   def add_point_to_winner
