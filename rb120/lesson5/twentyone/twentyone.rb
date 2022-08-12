@@ -40,11 +40,13 @@ play
 -----------------
 todo:
 
+fix bug:
+
 improve UI
 - add new lines
 - clear screen
 - display cards during initial dealing of hand
-  - hide one of dealer's cards
+- hide one of dealer's cards
 - add unicode graphics to greetings (there should be unicode for suits)
 
 improve logic:
@@ -126,6 +128,7 @@ class Player
 
       self.stay = true if choice.start_with? 'S'
       self.hits(deck) if choice.start_with? 'H'
+      # display_cards # this isn't going to fly
       break if self.stays? || self.busts?
     end
     puts "#{self.name} stays." if self.stays?
@@ -183,7 +186,7 @@ class Dealer < Player
 
   def takes_turn(deck)
     loop do
-      self.score > 16 ? self.hits(deck) : (self.stay = true)
+      self.score < 17 ? self.hits(deck) : (self.stay = true)
       break if self.stays? || self.busts?
     end
   end
@@ -219,8 +222,8 @@ class TwentyOneGame
   def play_game
     deck.shuffle
     deal_cards
-    players_take_turns(deck)
     display_cards
+    players_take_turns(deck)
     display_winner
   end
 
@@ -234,6 +237,7 @@ class TwentyOneGame
   def players_take_turns(deck)
     [user, dealer].each do |player|
       player.takes_turn(deck)
+      display_cards
       break if player.busts?
     end
   end
