@@ -42,6 +42,10 @@ todo:
 
 fix bug:
 
+- after splash screen
+  - press 'h' to read the game rules
+  - press 's' to start a new game
+
 improve UI
 - add new lines
 - clear screen
@@ -58,6 +62,60 @@ improve logic:
   - add wager during user turn
 
 =end
+require 'yaml'
+
+MESSAGES = YAML.load_file('twentyone_messages.yml')
+
+module Displayable
+UNICODE_SUITS = [[9828].pack('U*'), [9825].pack('U*'),
+                 [9831].pack('U*'), [9826].pack('U*')]
+
+  def clear
+    system 'clear'
+  end
+
+  def new_line(num = 1)
+    num.times { puts }
+  end
+
+  def horizontal_line
+    puts ('-' * 80)
+  end
+
+  def prompt(msg)
+    puts "=> #{msg}"
+  end
+
+  def prompt_yaml(msg)
+    puts "=> #{MESSAGES[msg]}"
+  end
+
+  def puts_yaml_center(msg)
+    puts "#{MESSAGES[msg].center(80)}"
+  end
+
+  def display_loading(count, output, msgs)
+    print "=> #{msgs[0]} "
+
+    count.times do
+      print '.'
+      sleep 0.1
+    end
+
+    puts " #{msgs[1]}!"
+    sleep 1
+  end
+
+  def pause(time)
+    sleep(time)
+  end
+
+  # def drumroll(total_wins) # implement
+  #   prompt 'Drumroll please!'
+  #   pause(20, ['And the winner is ', "the #{total_wins.key(5)}"], true)
+  #   puts ""
+  # end
+end
 
 class Deck
   SUITS = [:Spade, :Heart, :Club, :Diamond]
@@ -69,7 +127,7 @@ class Deck
     @cards = build_deck
   end
 
-  def shuffle # mutates
+  def shuffle!
     @cards.shuffle!
   end
 
@@ -94,7 +152,7 @@ class Card
 end
 
 class Player
-  attr_writer :stay
+  include Displayable
   attr_accessor :hand, :name
 
   def initialize
@@ -108,10 +166,10 @@ class Player
 
   def set_name
     loop do
-      puts "What should we call you?"
+      prompt_yaml 'set_name'
       self.name = gets.chomp.capitalize
       break unless name.empty?
-      puts "Sorry, I'm going to need something with a little substance.  Let's try again."
+      prompt_yaml 'try_again1'
     end
   end
 
@@ -120,13 +178,13 @@ class Player
       choice = nil
 
       loop do
-        puts "Do you want to (h)it or (s)tay?"
+        prompt_yaml 'hit_or_stay'
         choice = gets.chomp.upcase
         break if ['H', 'S'].include? choice[0]
-        puts "Sorry, I didn't get that.  Let's try again."
+        prompt_yaml 'try_again2'
       end
 
-      self.stay = true if choice.start_with? 'S'
+      self.stays if choice.start_with? 'S'
       self.hits(deck) if choice.start_with? 'H'
       # display_cards # this isn't going to fly
       break if self.stays? || self.busts?
@@ -140,6 +198,10 @@ class Player
     puts "#{self.name} draws a #{card.rank} of #{card.suit}."
   end
 
+  def stays
+    @stay = true
+  end
+
   def stays?
     @stay
   end
@@ -148,7 +210,7 @@ class Player
     self.score > 21
   end
 
-  def display_hand
+  def displays_hand
     if hand.size > 2
       "#{hand[0...-1].join(', ')}, and #{hand.last}"
     else
@@ -156,24 +218,31 @@ class Player
     end
   end
 
-  def score # points in player's hand
-    num_of_aces = hand.count { |card| card.rank == :ace }
+  def score # total points in hand
+    num_of_aces = hand.count { |card| card.rank == :Ace }
+    cards_scored = score_cards
+    reevaluate_for_aces(cards_scored, num_of_aces).sum
+  end
 
-    cards_scored = hand.map do |card|
-                     if (2..10).include? card.rank
-                       card.rank
-                     elsif [:Jack, :Queen, :King].include? card.rank
-                       10
-                     else
-                       1 # ace starts with min value
-                     end
-                   end
+  private
 
-    num_of_aces.times do # converts ace values to 11 if the hand doesn't bust
+  def score_cards # ace starts with min value
+    hand.map do |card|
+      if (2..10).include? card.rank
+        card.rank
+      elsif [:Jack, :Queen, :King].include? card.rank
+        10
+      else # ace
+        1
+      end
+    end
+  end
+
+  def reevaluate_for_aces(cards_scored, num_of_aces)
+    num_of_aces.times do
       cards_scored << 10 if cards_scored.sum <= 11
     end
-
-    cards_scored.sum
+    cards_scored
   end
 end
 
@@ -186,13 +255,16 @@ class Dealer < Player
 
   def takes_turn(deck)
     loop do
-      self.score < 17 ? self.hits(deck) : (self.stay = true)
+      self.score < 17 ? self.hits(deck) : self.stays
+      # display_cards
+      gets
       break if self.stays? || self.busts?
     end
   end
 end
 
 class TwentyOneGame
+  include Displayable
   attr_accessor :deck, :user, :dealer
 
   def initialize
@@ -203,7 +275,9 @@ class TwentyOneGame
 
   def play
     display_greetings_message
+    display_menu
     setup_game
+    display_introductions(user, dealer)
     play_game
     display_goodbye_message
   end
@@ -211,20 +285,78 @@ class TwentyOneGame
   private
 
   def display_greetings_message
-    puts "Welcome to Blackjack!"
+    display_splash_screen
+    new_line
+    puts_yaml_center 'continue'
+    gets
+  end
+
+  def display_splash_screen
+    clear
+    new_line 5
+    puts_yaml_center 'greetings'
+    puts UNICODE_SUITS.join('  ').center(80)
+  end
+
+  def display_menu
+    choice = nil
+    loop do
+      loop do
+        display_splash_screen
+        new_line
+        prompt_yaml 'new_game?'
+        prompt_yaml 'display_rules?'
+        choice = gets.chomp.upcase
+        break if ['N', 'R'].include? choice[0]
+      end
+
+      break if choice.start_with? 'N'
+      display_game_rules if choice.start_with? 'R'
+    end
   end
 
   def setup_game
+    clear
+    new_line
     user.set_name
     dealer.set_name
   end
 
+  def display_introductions(user, dealer)
+    clear
+    new_line
+    prompt "Welcome to the blackjack table, #{user.name}."
+    pause 1
+    prompt "Please welcome, #{dealer.name}, your dealer for this game."
+    pause 1
+  end
+
+  def display_game_rules
+    clear
+    new_line
+    prompt_yaml 'game_rules'
+    new_line
+    puts_yaml_center 'continue'
+    gets
+  end
+
   def play_game
-    deck.shuffle
+    shuffle_cards
     deal_cards
+    new_line
     display_cards
     players_take_turns(deck)
     display_winner
+  end
+
+  def shuffle_cards
+    deck.shuffle!
+    display_shuffling
+  end
+
+  def display_shuffling
+    new_line
+    display_loading(15, true, ['Shuffling ', 'FINISHED'])
   end
 
   def deal_cards # 2 cards to each player
@@ -234,17 +366,19 @@ class TwentyOneGame
     end
   end
 
+  def display_cards
+    puts "#{user.name} has #{user.displays_hand}. (#{user.score} points)"
+    puts "#{dealer.name} has #{dealer.displays_hand}. (#{dealer.score} points)"
+  end
+
   def players_take_turns(deck)
     [user, dealer].each do |player|
+      new_line
       player.takes_turn(deck)
+      new_line
       display_cards
       break if player.busts?
     end
-  end
-
-  def display_cards
-    puts "#{user.name} has #{user.display_hand}. (#{user.score} points)"
-    puts "#{dealer.name} has #{dealer.display_hand}. (#{dealer.score} points)"
   end
 
   def display_winner
@@ -252,9 +386,9 @@ class TwentyOneGame
   end
 
   def winner
-    if user.score > 21
+    if user.busts?
       dealer
-    elsif dealer.score > 21
+    elsif dealer.busts?
       user
     else
       dealer.score >= user.score ? dealer : user
@@ -262,7 +396,7 @@ class TwentyOneGame
   end
 
   def display_goodbye_message
-    puts "Thanks for playing!  Goodbye."
+    puts_yaml_center 'goodbye'
   end
 end
 
