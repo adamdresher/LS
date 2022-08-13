@@ -43,7 +43,6 @@ todo:
 fix bug:
 
 improve UI
-- add new lines
 - clear screen
 - hide one of dealer's cards
 
@@ -184,23 +183,17 @@ class Player
     end
   end
 
-  def takes_turn(deck) # refactor to chooses_turn, extracts stay/hits logic
+  def chooses_move(deck)
+    choice = nil
     loop do
-      choice = nil
-
-      loop do
-        prompt_yaml 'hit_or_stay'
-        choice = gets.chomp.upcase
-        break if ['H', 'S'].include? choice[0]
-        prompt_yaml 'try_again2'
-      end
-
-      self.stays if choice.start_with? 'S'
-      self.hits(deck) if choice.start_with? 'H'
-      # display_cards # this isn't going to fly
-      break if self.stays? || self.busts?
+      prompt_yaml 'hit_or_stay'
+      choice = gets.chomp.upcase
+      break if ['H', 'S'].include? choice[0]
+      prompt_yaml 'try_again2'
     end
-    puts "#{self.name} stays." if self.stays?
+
+    self.stays if choice.start_with? 'S'
+    self.hits(deck) if choice.start_with? 'H'
   end
 
   def hits(deck)
@@ -229,13 +222,8 @@ class Dealer < Player
     self.name = AI_NAMES.sample
   end
 
-  def takes_turn(deck)
-    loop do
-      self.score < 17 ? self.hits(deck) : self.stays
-      # display_cards
-      gets
-      break if self.stays? || self.busts?
-    end
+  def chooses_move(deck)
+    self.score < 17 ? self.hits(deck) : self.stays
   end
 end
 
@@ -358,11 +346,14 @@ class TwentyOneGame
   end
 
   def play_game
+    new_line
     shuffle_cards
     deal_cards
     new_line
     display_cards
+    new_line
     players_take_turns(deck)
+    new_line
     display_winner
   end
 
@@ -372,7 +363,6 @@ class TwentyOneGame
   end
 
   def display_shuffling
-    new_line
     display_loading(15, true, ['Shuffling ', 'FINISHED'])
   end
 
@@ -390,15 +380,29 @@ class TwentyOneGame
 
   def players_take_turns(deck)
     [user, dealer].each do |player|
-      new_line
-      player.takes_turn(deck)
-      new_line
-      display_cards
+      current_turn(player, deck)
       break if player.busts?
     end
   end
 
+  def current_turn(player, deck)
+    loop do
+      new_line
+      player.chooses_move(deck)
+      break if player.stays?
+      new_line
+      display_cards
+      break if player.busts?
+      pause 1.5
+    end
+    puts "#{player.name} stays." if player.stays?
+  end
+
   def display_winner
+    # clear
+    # new_line
+    display_cards
+    new_line
     puts "#{winner} wins the game!"
   end
 
@@ -407,6 +411,8 @@ class TwentyOneGame
       dealer
     elsif dealer.busts?
       user
+    # elsif dealer.score == user.score
+      # tie
     else
       dealer.score >= user.score ? dealer : user
     end
