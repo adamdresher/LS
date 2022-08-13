@@ -73,7 +73,7 @@ UNICODE_SUITS = [[9828].pack('U*'), [9825].pack('U*'),
     num.times { puts }
   end
 
-  def horizontal_line
+  def horizontal_line # currently unused
     puts ('-' * 80)
   end
 
@@ -112,50 +112,62 @@ UNICODE_SUITS = [[9828].pack('U*'), [9825].pack('U*'),
   # end
 end
 
-class Deck
-  SUITS = [:Spade, :Heart, :Club, :Diamond]
-  RANKS = [2, 3, 4, 5, 6, 7, 8, 9, 10, :Jack, :Queen, :King, :Ace]
-
-  attr_reader :cards
+module Hand
+  attr_accessor :hand
 
   def initialize
-    @cards = build_deck
+    @hand = []
   end
 
-  def shuffle!
-    @cards.shuffle!
+  def displays_hand
+    hand = hand_with_articles
+
+    if hand.size > 2
+      "#{hand[0...-1].join(', ')}, and #{hand.last}"
+    else
+      hand.join(' and ')
+    end
+  end
+
+  def score # total points in hand
+    num_of_aces = hand.count { |card| card.rank == :Ace }
+    cards_scored = score_cards
+    reevaluate_for_aces(cards_scored, num_of_aces).sum
   end
 
   private
 
-  def build_deck
-    SUITS.map { |suit| RANKS.map { |rank| Card.new(suit, rank) }}.flatten
-  end
-end
-
-class Card
-  attr_reader :suit, :rank
-
-  def initialize(suit, rank)
-    @suit = suit
-    @rank = rank
-  end
-
-  def to_s
-    "#{rank} of #{suit}"
+  def score_cards # ace starts with min value
+    hand.map do |card|
+      if (2..10).include? card.rank
+        card.rank
+      elsif [:Jack, :Queen, :King].include? card.rank
+        10
+      else # ace
+        1
+      end
+    end
   end
 
-  def with_article
-    [:Ace, 8].include?(rank) ? "an #{self}}" : "a #{self}}"
+  def reevaluate_for_aces(cards_scored, num_of_aces)
+    num_of_aces.times do
+      cards_scored << 10 if cards_scored.sum <= 11
+    end
+    cards_scored
+  end
+
+  def hand_with_articles
+    hand.map { |card| "#{card.with_article}" }
   end
 end
 
 class Player
   include Displayable
-  attr_accessor :hand, :name
+  include Hand
+  attr_accessor :name
 
   def initialize
-    @hand = []
+    super
     @stay = false # false means turn is not over, true means turn is over
   end
 
@@ -208,47 +220,6 @@ class Player
   def busts?
     self.score > 21
   end
-
-  def displays_hand
-    hand = hand_with_articles
-
-    if hand.size > 2
-      "#{hand[0...-1].join(', ')}, and #{hand.last}"
-    else
-      hand.join(' and ')
-    end
-  end
-
-  def score # total points in hand
-    num_of_aces = hand.count { |card| card.rank == :Ace }
-    cards_scored = score_cards
-    reevaluate_for_aces(cards_scored, num_of_aces).sum
-  end
-
-  private
-
-  def score_cards # ace starts with min value
-    hand.map do |card|
-      if (2..10).include? card.rank
-        card.rank
-      elsif [:Jack, :Queen, :King].include? card.rank
-        10
-      else # ace
-        1
-      end
-    end
-  end
-
-  def reevaluate_for_aces(cards_scored, num_of_aces)
-    num_of_aces.times do
-      cards_scored << 10 if cards_scored.sum <= 11
-    end
-    cards_scored
-  end
-
-  def hand_with_articles
-    hand.map { |card| "#{card.with_article}" }
-  end
 end
 
 class Dealer < Player
@@ -265,6 +236,44 @@ class Dealer < Player
       gets
       break if self.stays? || self.busts?
     end
+  end
+end
+
+class Deck
+  SUITS = [:Spade, :Heart, :Club, :Diamond]
+  RANKS = [2, 3, 4, 5, 6, 7, 8, 9, 10, :Jack, :Queen, :King, :Ace]
+
+  attr_reader :cards
+
+  def initialize
+    @cards = build_deck
+  end
+
+  def shuffle!
+    @cards.shuffle!
+  end
+
+  private
+
+  def build_deck
+    SUITS.map { |suit| RANKS.map { |rank| Card.new(suit, rank) }}.flatten
+  end
+end
+
+class Card
+  attr_reader :suit, :rank
+
+  def initialize(suit, rank)
+    @suit = suit
+    @rank = rank
+  end
+
+  def to_s
+    "#{rank} of #{suit}"
+  end
+
+  def with_article
+    [:Ace, 8].include?(rank) ? "an #{self}" : "a #{self}"
   end
 end
 
@@ -332,8 +341,9 @@ class TwentyOneGame
     new_line
     prompt "Welcome to the blackjack table, #{user.name}."
     pause 1
-    prompt "My name is #{dealer.name} and I will be your dealer for this game.\n\
-   (fair warning, I like to speak in third person sometimes)."
+    prompt "My name is #{dealer.name} and I will be your dealer for this game."
+    pause 0.5
+    puts "   (btw, does it annoy you when people speak in third person?)"
     pause 1.5
   end
 
