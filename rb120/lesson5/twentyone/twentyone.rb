@@ -61,8 +61,8 @@ require 'yaml'
 MESSAGES = YAML.load_file('twentyone_messages.yml')
 
 module Displayable
-UNICODE_SUITS = [[9828].pack('U*'), [9825].pack('U*'),
-                 [9831].pack('U*'), [9826].pack('U*')]
+  UNICODE_SUITS = [[9828].pack('U*'), [9825].pack('U*'),
+                   [9831].pack('U*'), [9826].pack('U*')]
 
   def clear
     system 'clear'
@@ -104,6 +104,14 @@ UNICODE_SUITS = [[9828].pack('U*'), [9825].pack('U*'),
     sleep(time)
   end
 
+  def display_try_again(choice_empty)
+    if choice_empty
+      prompt_yaml 'try_again1'
+    else
+      prompt_yaml 'try_again2'
+    end
+  end
+
   # def drumroll(total_wins) # implement
   #   prompt 'Drumroll please!'
   #   pause(20, ['And the winner is ', "the #{total_wins.key(5)}"], true)
@@ -118,8 +126,9 @@ module Hand
     @hand = []
   end
 
-  def displays_hand
+  def displays_hand(show_first_card = true) # can hide a card # test
     hand = hand_with_articles
+    hand = hides_first_card unless show_first_card
 
     if hand.size > 2
       "#{hand[0...-1].join(', ')}, and #{hand.last}"
@@ -130,13 +139,22 @@ module Hand
 
   def score # total points in hand
     num_of_aces = hand.count { |card| card.rank == :Ace }
-    cards_scored = score_cards
-    reevaluate_for_aces(cards_scored, num_of_aces).sum
+    cards_scored = cards_initial_score
+    cards_reevaluated_for_aces(cards_scored, num_of_aces).sum
   end
 
   private
 
-  def score_cards # ace starts with min value
+  def hand_with_articles
+    hand.map { |card| "#{card.with_article}" }
+  end
+
+  def hides_first_card
+    first_card = 'an unknown card'
+    hand[1..].prepend first_card
+  end
+
+  def cards_initial_score # ace starts with min value
     hand.map do |card|
       if (2..10).include? card.rank
         card.rank
@@ -148,15 +166,11 @@ module Hand
     end
   end
 
-  def reevaluate_for_aces(cards_scored, num_of_aces)
+  def cards_reevaluated_for_aces(cards_scored, num_of_aces)
     num_of_aces.times do
       cards_scored << 10 if cards_scored.sum <= 11
     end
     cards_scored
-  end
-
-  def hand_with_articles
-    hand.map { |card| "#{card.with_article}" }
   end
 end
 
@@ -166,7 +180,7 @@ class Player
   attr_accessor :name
 
   def initialize
-    super
+    super # from Hand
     @stay = false # false means turn is not over, true means turn is over
   end
 
@@ -175,31 +189,42 @@ class Player
   end
 
   def set_name
+    try_again = nil
+    prompt_yaml 'set_name1'
+
     loop do
-      prompt_yaml 'set_name'
+      if try_again
+        prompt_yaml 'try_again1'
+        pause 1
+        prompt_yaml 'set_name2'
+      end
       self.name = gets.chomp.capitalize
       break unless name.empty?
-      prompt_yaml 'try_again1'
+      try_again = true
+      pause 0.5
+      clear
+      new_line
     end
   end
 
   def chooses_move(deck)
     choice = nil
+
     loop do
       prompt_yaml 'hit_or_stay'
       choice = gets.chomp.upcase
       break if ['H', 'S'].include? choice[0]
-      prompt_yaml 'try_again2'
+      display_try_again(choice.empty?)
     end
 
     self.stays if choice.start_with? 'S'
     self.hits(deck) if choice.start_with? 'H'
   end
 
-  def hits(deck)
-    card = deck.cards.pop # mutates the deck
+  def hits(deck) # mutates the deck
+    card = deck.cards.pop
     hand << card
-    puts "#{self.name} draws #{card.with_article}."
+    prompt "#{self.name} draws #{card.with_article}."
   end
 
   def stays
@@ -217,6 +242,7 @@ end
 
 class Dealer < Player
   AI_NAMES = ['Bender', 'Faye', 'Roy Batty', 'Data', 'Bishop', 'Dot Matrix']
+  attr_writer :reveals_hidden_card
 
   def set_name
     self.name = AI_NAMES.sample
@@ -224,6 +250,11 @@ class Dealer < Player
 
   def chooses_move(deck)
     self.score < 17 ? self.hits(deck) : self.stays
+    self.reveals_hidden_card = true
+  end
+
+  def reveals_hidden_card?
+    @reveals_hidden_card
   end
 end
 
@@ -260,7 +291,7 @@ class Card
     "#{rank} of #{suit}"
   end
 
-  def with_article
+  def with_article # applies an article with correct grammar
     [:Ace, 8].include?(rank) ? "an #{self}" : "a #{self}"
   end
 end
@@ -277,10 +308,13 @@ class TwentyOneGame
 
   def play
     display_greetings_message
-    display_menu
-    setup_game
-    display_introductions(user, dealer)
-    play_game
+    loop do
+      display_menu
+      setup_game
+      display_introductions(user, dealer)
+      play_game
+      break unless play_again?
+    end
     display_goodbye_message
   end
 
@@ -301,15 +335,16 @@ class TwentyOneGame
   end
 
   def display_menu
+    choices = ['N', 'R'] # (N)ew game or (R))ules
     choice = nil
     loop do
       loop do
         display_splash_screen
         new_line 2
-        prompt_yaml 'new_game?'
-        prompt_yaml 'display_rules?'
+        puts_yaml_center 'new_game?'
+        puts_yaml_center 'display_rules?'
         choice = gets.chomp.upcase
-        break if ['N', 'R'].include? choice[0]
+        break if choices.include? choice[0]
       end
 
       break if choice.start_with? 'N'
@@ -368,14 +403,20 @@ class TwentyOneGame
 
   def deal_cards # 2 cards to each player
     2.times do
-      user.hand << deck.cards.pop # both face up
-      dealer.hand << deck.cards.pop # one face up, one face down
+      user.hand << deck.cards.pop
+      dealer.hand << deck.cards.pop
     end
   end
 
-  def display_cards
-    puts "#{user.name} has #{user.displays_hand}. (#{user.score} points)"
-    puts "#{dealer.name} has #{dealer.displays_hand}. (#{dealer.score} points)"
+  def display_cards # test
+    dealers_hand = if dealer.reveals_hidden_card?
+                     dealer.displays_hand
+                   else
+                     dealer.displays_hand(false)
+                   end
+
+    prompt "#{user.name} has #{user.displays_hand}. (#{user.score} points)"
+    prompt "#{dealer.name} has #{dealers_hand}. (#{dealer.score} points)"
   end
 
   def players_take_turns(deck)
@@ -401,9 +442,9 @@ class TwentyOneGame
   def display_winner
     # clear
     # new_line
-    display_cards
-    new_line
-    puts "#{winner} wins the game!"
+    # display_cards
+    # new_line
+    prompt "#{winner} wins the game!"
   end
 
   def winner
@@ -416,6 +457,20 @@ class TwentyOneGame
     else
       dealer.score >= user.score ? dealer : user
     end
+  end
+
+  def play_again?
+    choices = ['Y', 'N'] # (Y)es or (N)o
+    choice = nil
+
+    loop do
+      prompt_yaml 'play_again?'
+      choice = gets.chomp.upcase
+      break if choices.include? choice[0]
+      display_try_again(choice.empty?)
+    end
+
+    choice[0] == 'Y'
   end
 
   def display_goodbye_message
