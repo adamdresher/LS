@@ -42,19 +42,12 @@ todo:
 
 fix bug:
 
-- after splash screen
-  - press 'h' to read the game rules
-  - press 's' to start a new game
-
 improve UI
 - add new lines
 - clear screen
-- display cards during initial dealing of hand
 - hide one of dealer's cards
-- add unicode graphics to greetings (there should be unicode for suits)
 
 improve logic:
-- add instructions option
 - add option to play again
 - add option to split when dealt two of a kind
 - add option to gamble
@@ -62,6 +55,8 @@ improve logic:
   - add wager during user turn
 
 =end
+require 'pry'
+require 'pry-byebug'
 require 'yaml'
 
 MESSAGES = YAML.load_file('twentyone_messages.yml')
@@ -149,6 +144,10 @@ class Card
   def to_s
     "#{rank} of #{suit}"
   end
+
+  def with_article
+    [:Ace, 8].include?(rank) ? "an #{self}}" : "a #{self}}"
+  end
 end
 
 class Player
@@ -195,7 +194,7 @@ class Player
   def hits(deck)
     card = deck.cards.pop # mutates the deck
     hand << card
-    puts "#{self.name} draws a #{card.rank} of #{card.suit}."
+    puts "#{self.name} draws #{card.with_article}."
   end
 
   def stays
@@ -211,6 +210,8 @@ class Player
   end
 
   def displays_hand
+    hand = hand_with_articles
+
     if hand.size > 2
       "#{hand[0...-1].join(', ')}, and #{hand.last}"
     else
@@ -243,6 +244,10 @@ class Player
       cards_scored << 10 if cards_scored.sum <= 11
     end
     cards_scored
+  end
+
+  def hand_with_articles
+    hand.map { |card| "#{card.with_article}" }
   end
 end
 
@@ -303,7 +308,7 @@ class TwentyOneGame
     loop do
       loop do
         display_splash_screen
-        new_line
+        new_line 2
         prompt_yaml 'new_game?'
         prompt_yaml 'display_rules?'
         choice = gets.chomp.upcase
@@ -327,14 +332,16 @@ class TwentyOneGame
     new_line
     prompt "Welcome to the blackjack table, #{user.name}."
     pause 1
-    prompt "Please welcome, #{dealer.name}, your dealer for this game."
-    pause 1
+    prompt "My name is #{dealer.name} and I will be your dealer for this game.\n\
+   (fair warning, I like to speak in third person sometimes)."
+    pause 1.5
   end
 
   def display_game_rules
     clear
-    new_line
-    prompt_yaml 'game_rules'
+    new_line 7
+    puts_yaml_center 'game_rules1'
+    puts_yaml_center 'game_rules2'
     new_line
     puts_yaml_center 'continue'
     gets
