@@ -43,16 +43,12 @@ todo:
 fix bug:
 
 improve UI
-- clear screen
-- hide one of dealer's cards
 
 improve logic:
-- add option to play again
 - add option to split when dealt two of a kind
 - add option to gamble
   - create user wallet
   - add wager during user turn
-
 =end
 require 'pry'
 require 'pry-byebug'
@@ -104,12 +100,17 @@ module Displayable
     sleep(time)
   end
 
+  def confirm(msg, alignment = :left) # test
+    new_line
+    alignment == :left ? prompt_yaml(msg) : puts_yaml_center(msg)
+    gets
+  end
+
   def display_try_again(choice_empty)
-    if choice_empty
-      prompt_yaml 'try_again1'
-    else
-      prompt_yaml 'try_again2'
-    end
+    choices = (1..7).map { |num| "try_again#{num}" }
+    choice = choice_empty ? choices[0] : choices[1..].sample
+
+    prompt_yaml choice
   end
 
   # def drumroll(total_wins) # implement
@@ -123,6 +124,10 @@ module Hand
   attr_accessor :hand
 
   def initialize
+    @hand = []
+  end
+
+  def return_cards
     @hand = []
   end
 
@@ -214,6 +219,7 @@ class Player
       prompt_yaml 'hit_or_stay'
       choice = gets.chomp.upcase
       break if ['H', 'S'].include? choice[0]
+      new_line
       display_try_again(choice.empty?)
     end
 
@@ -238,6 +244,11 @@ class Player
   def busts?
     self.score > 21
   end
+
+  def return_cards
+    super
+    @stay = false
+  end
 end
 
 class Dealer < Player
@@ -253,6 +264,29 @@ class Dealer < Player
     self.reveals_hidden_card = true
   end
 
+  def secret_hand
+    if self.reveals_hidden_card?
+      self.displays_hand
+    else
+      self.displays_hand(false)
+    end
+  end
+
+  def secret_score
+    if self.reveals_hidden_card?
+      self.score
+    else
+      '???'
+    end
+  end
+
+  def return_cards
+    super
+    reveals_hidden_card = false
+  end
+
+  private
+
   def reveals_hidden_card?
     @reveals_hidden_card
   end
@@ -265,17 +299,15 @@ class Deck
   attr_reader :cards
 
   def initialize
-    @cards = build_deck
+    reset
+  end
+
+  def reset
+    @cards = SUITS.map { |suit| RANKS.map { |rank| Card.new(suit, rank) }}.flatten
   end
 
   def shuffle!
     @cards.shuffle!
-  end
-
-  private
-
-  def build_deck
-    SUITS.map { |suit| RANKS.map { |rank| Card.new(suit, rank) }}.flatten
   end
 end
 
@@ -291,7 +323,7 @@ class Card
     "#{rank} of #{suit}"
   end
 
-  def with_article # applies an article with correct grammar
+  def with_article # applies with correct grammar
     [:Ace, 8].include?(rank) ? "an #{self}" : "a #{self}"
   end
 end
@@ -308,10 +340,10 @@ class TwentyOneGame
 
   def play
     display_greetings_message
+    game_menu
+    greet_dealer
     loop do
-      display_menu
       setup_game
-      display_introductions(user, dealer)
       play_game
       break unless play_again?
     end
@@ -322,9 +354,7 @@ class TwentyOneGame
 
   def display_greetings_message
     display_splash_screen
-    new_line
-    puts_yaml_center 'continue'
-    gets
+    confirm('continue', :centered)
   end
 
   def display_splash_screen
@@ -334,15 +364,13 @@ class TwentyOneGame
     puts UNICODE_SUITS.join('  ').center(80)
   end
 
-  def display_menu
+  def game_menu
     choices = ['N', 'R'] # (N)ew game or (R))ules
     choice = nil
+
     loop do
       loop do
-        display_splash_screen
-        new_line 2
-        puts_yaml_center 'new_game?'
-        puts_yaml_center 'display_rules?'
+        display_menu
         choice = gets.chomp.upcase
         break if choices.include? choice[0]
       end
@@ -352,11 +380,19 @@ class TwentyOneGame
     end
   end
 
-  def setup_game
+  def display_menu
+    display_splash_screen
+    new_line 2
+    puts_yaml_center 'new_game?'
+    puts_yaml_center 'display_rules?'
+  end
+
+  def greet_dealer
     clear
     new_line
     user.set_name
     dealer.set_name
+    display_introductions(user, dealer)
   end
 
   def display_introductions(user, dealer)
@@ -375,14 +411,24 @@ class TwentyOneGame
     new_line 7
     puts_yaml_center 'game_rules1'
     puts_yaml_center 'game_rules2'
+    confirm('continue', :centered)
+  end
+
+  def setup_game
     new_line
-    puts_yaml_center 'continue'
-    gets
+    collect_cards
+    shuffle_cards
+    confirm('begin')
+  end
+
+  def collect_cards
+    user.return_cards
+    dealer.return_cards
+    deck.reset
   end
 
   def play_game
-    new_line
-    shuffle_cards
+    clear
     deal_cards
     new_line
     display_cards
@@ -408,15 +454,9 @@ class TwentyOneGame
     end
   end
 
-  def display_cards # test
-    dealers_hand = if dealer.reveals_hidden_card?
-                     dealer.displays_hand
-                   else
-                     dealer.displays_hand(false)
-                   end
-
+  def display_cards
     prompt "#{user.name} has #{user.displays_hand}. (#{user.score} points)"
-    prompt "#{dealer.name} has #{dealers_hand}. (#{dealer.score} points)"
+    prompt "#{dealer.name} has #{dealer.secret_hand}. (#{dealer.secret_score} points)"
   end
 
   def players_take_turns(deck)
@@ -440,11 +480,11 @@ class TwentyOneGame
   end
 
   def display_winner
-    # clear
-    # new_line
-    # display_cards
-    # new_line
-    prompt "#{winner} wins the game!"
+    if winner
+      prompt "#{winner} wins the game!"
+    else
+      prompt "Tie goes to the #{dealer}, suck it."
+    end
   end
 
   def winner
@@ -452,8 +492,8 @@ class TwentyOneGame
       dealer
     elsif dealer.busts?
       user
-    # elsif dealer.score == user.score
-      # tie
+    elsif dealer.score == user.score
+      nil
     else
       dealer.score >= user.score ? dealer : user
     end
@@ -467,6 +507,7 @@ class TwentyOneGame
       prompt_yaml 'play_again?'
       choice = gets.chomp.upcase
       break if choices.include? choice[0]
+      new_line
       display_try_again(choice.empty?)
     end
 
@@ -474,7 +515,7 @@ class TwentyOneGame
   end
 
   def display_goodbye_message
-    puts_yaml_center 'goodbye'
+    prompt_yaml 'goodbye'
   end
 end
 
