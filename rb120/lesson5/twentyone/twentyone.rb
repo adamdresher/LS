@@ -1,5 +1,3 @@
-require 'pry'
-require 'pry-byebug'
 require 'yaml'
 
 MESSAGES = YAML.load_file('twentyone_messages.yml')
@@ -16,8 +14,9 @@ module Displayable
     num.times { puts }
   end
 
-  def horizontal_line # currently unused
-    puts ('-' * 80)
+  def clear_and_new_line(quantity=1)
+    clear
+    new_line quantity
   end
 
   def prompt(msg)
@@ -29,26 +28,14 @@ module Displayable
   end
 
   def puts_yaml_center(msg)
-    puts "#{MESSAGES[msg].center(80)}"
-  end
-
-  def display_loading(count, output, msgs)
-    print "=> #{msgs[0]} "
-
-    count.times do
-      print '.'
-      sleep 0.1
-    end
-
-    puts " #{msgs[1]}!"
-    sleep 1
+    puts MESSAGES[msg].center(80)
   end
 
   def pause(time)
     sleep(time)
   end
 
-  def confirm(msg, alignment = :left) # test
+  def confirm(msg, alignment = :left)
     new_line
     alignment == :left ? prompt_yaml(msg) : puts_yaml_center(msg)
     gets
@@ -56,16 +43,10 @@ module Displayable
 
   def display_try_again(choice_empty)
     choices = (1..7).map { |num| "try_again#{num}" }
-    choice = choice_empty ? choices[0] : choices[1..].sample
+    choice = choice_empty ? choices[0] : choices[1..-1].sample
 
     prompt_yaml choice
   end
-
-  # def drumroll(total_wins) # implement
-  #   prompt 'Drumroll please!'
-  #   pause(20, ['And the winner is ', "the #{total_wins.key(5)}"], true)
-  #   puts ""
-  # end
 end
 
 module Hand
@@ -79,7 +60,7 @@ module Hand
     @hand = []
   end
 
-  def displays_hand(show_first_card = true) # can hide a card # test
+  def displays_hand(show_first_card = true) # can hide a card
     hand = hand_with_articles
     hand = hides_first_card unless show_first_card
 
@@ -99,12 +80,12 @@ module Hand
   private
 
   def hand_with_articles
-    hand.map { |card| "#{card.with_article}" }
+    hand.map { |card| card.with_article.to_s }
   end
 
   def hides_first_card
     first_card = 'an unknown card'
-    hand[1..].prepend first_card
+    hand[1..-1].prepend first_card
   end
 
   def cards_initial_score # ace starts with min value
@@ -127,6 +108,8 @@ module Hand
   end
 end
 
+# reads better with prepending self keywords
+# rubocop:disable Style/RedundantSelf
 class Player
   include Displayable
   include Hand
@@ -146,18 +129,19 @@ class Player
     prompt_yaml 'set_name1'
 
     loop do
-      if try_again
-        prompt_yaml 'try_again1'
-        pause 1
-        prompt_yaml 'set_name2'
-      end
+      display_name_request_again if try_again
       self.name = gets.chomp.capitalize
       break unless name.empty?
       try_again = true
       pause 0.5
-      clear
-      new_line
+      clear_and_new_line
     end
+  end
+
+  def display_name_request_again
+    prompt_yaml 'try_again1'
+    pause 1
+    prompt_yaml 'set_name2'
   end
 
   def chooses_move(deck)
@@ -230,7 +214,7 @@ class Dealer < Player
 
   def return_cards
     super
-    reveals_hidden_card = false
+    self.reveals_hidden_card = false
   end
 
   private
@@ -239,6 +223,7 @@ class Dealer < Player
     @reveals_hidden_card
   end
 end
+# rubocop:enable Style/RedundantSelf
 
 class Deck
   SUITS = [:Spade, :Heart, :Club, :Diamond]
@@ -251,7 +236,9 @@ class Deck
   end
 
   def reset
-    @cards = SUITS.map { |suit| RANKS.map { |rank| Card.new(suit, rank) }}.flatten
+    @cards = SUITS.map do |suit|
+      RANKS.map { |rank| Card.new(suit, rank) }
+    end.flatten
   end
 
   def shuffle!
@@ -306,12 +293,12 @@ class TwentyOneGame
   end
 
   def display_splash_screen
-    clear
-    new_line 5
+    clear_and_new_line 5
     puts_yaml_center 'greetings'
     puts UNICODE_SUITS.join('  ').center(80)
   end
 
+  # rubocop:disable Metrics/MethodLength
   def game_menu
     choices = ['N', 'R'] # (N)ew game or (R))ules
     choice = nil
@@ -327,6 +314,7 @@ class TwentyOneGame
       display_game_rules if choice.start_with? 'R'
     end
   end
+  # rubocop:enable Metrics/MethodLength
 
   def display_menu
     display_splash_screen
@@ -336,16 +324,14 @@ class TwentyOneGame
   end
 
   def greet_dealer
-    clear
-    new_line
+    clear_and_new_line
     user.set_name
     dealer.set_name
     display_introductions(user, dealer)
   end
 
   def display_introductions(user, dealer)
-    clear
-    new_line
+    clear_and_new_line
     prompt "Welcome to the blackjack table, #{user.name}."
     pause 1
     prompt "My name is #{dealer.name} and I will be your dealer for this game."
@@ -355,8 +341,7 @@ class TwentyOneGame
   end
 
   def display_game_rules
-    clear
-    new_line 7
+    clear_and_new_line 7
     puts_yaml_center 'game_rules1'
     puts_yaml_center 'game_rules2'
     confirm('continue', :centered)
@@ -392,7 +377,15 @@ class TwentyOneGame
   end
 
   def display_shuffling
-    display_loading(15, true, ['Shuffling ', 'FINISHED'])
+    print "=> Shuffling "
+
+    15.times do
+      print '.'
+      sleep 0.1
+    end
+
+    puts " FINISHED!"
+    sleep 1
   end
 
   def deal_cards # 2 cards to each player
@@ -403,8 +396,8 @@ class TwentyOneGame
   end
 
   def display_cards
-    prompt "#{user.name} has #{user.displays_hand}. (#{user.score} points)"
-    prompt "#{dealer.name} has #{dealer.secret_hand}. (#{dealer.secret_score} points)"
+    prompt "#{user.name} has #{user.displays_hand}. (#{user.score})"
+    prompt "#{dealer.name} has #{dealer.secret_hand}. (#{dealer.secret_score})"
   end
 
   def players_take_turns(deck)
