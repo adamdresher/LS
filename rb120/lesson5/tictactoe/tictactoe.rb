@@ -309,7 +309,7 @@ class TTTGame
       pause
     end
 
-    mark_human_square(choice) # not an instance variable
+    self.set_mark_human_square=(choice) # not an instance variable
   end
   # rubocop:enable Metrics/MethodLength
 
@@ -333,7 +333,7 @@ class TTTGame
     end
   end
 
-  def mark_human_square(choice)
+  def set_mark_human_square=(choice)
     board[choice.to_i] = human.marker
   end
 
