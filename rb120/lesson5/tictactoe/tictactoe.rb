@@ -107,13 +107,148 @@ class Square
 end
 
 class Player
+  include Displayable
   attr_accessor :name, :marker
+
+  private
+
+  def has_two_squares?
+    winning_square_num.class == Integer
+  end
+
+  def winning_square_num
+    Board::WINNING_LINES.each do |line|
+      squares = board.squares.values_at(*line).map(&:marker)
+
+      if squares.count(self.marker) == 2 &&
+         squares.count(Square::INITIAL_MARKER) == 1
+        return select_empty_square(line)
+      end
+    end
+  end
+
+  def select_empty_square(squares)
+    squares.select { |square| board.squares[square].unmarked? }.first
+  end
+end
+
+class Human < Player
+  def set_name
+    loop do
+      clear_and_new_line
+      prompt "Please enter your name:"
+      self.name = gets.chomp.capitalize
+      break unless self.name.empty? || name.chars.all? { |char| char == ' ' } # test
+      prompt "Sorry, that's an invalid entry."
+      pause
+    end
+  end
+
+  def set_marker(opponent)
+    loop do
+      clear_and_new_line
+      prompt "Thanks #{self.name}.  You'll be playing with #{opponent.name}."
+      prompt "Which marker would you like to play as?  (X or O)"
+      user_marker = gets.chomp.upcase
+      self.marker = user_marker
+      break if ['X', 'O'].include? user_marker
+      prompt "Sorry, that's not a marker.  Please try again."
+      pause
+    end
+  end
+
+  # rubocop:disable Metrics/MethodLength
+  def moves(board)
+    choice = nil # converts to 0 when no value is recieved
+
+    loop do
+      choice = picks_square(board)
+      if choice.start_with? 'H'
+        # display_help # dependency required TTTGame::display_help
+        TTTGame::(board)
+        next
+      end
+      break if board.unmarked_keys.include? choice.to_i # dependency required
+      prompt "Sorry, that's not a valid choice."
+      pause
+    end
+
+    self.marks_square(board, choice) # not an instance variable
+  end
+  # rubocop:enable Metrics/MethodLength
+
+  private
+
+  def picks_square(board)
+    display_available_square_choices(board)
+    gets.chomp.upcase
+  end
+
+  def display_available_square_choices(board)
+    TTTGame::clear_screen_and_display(board)
+    prompt "Choose a square (#{remaining_squares(board)}):"
+  end
+
+  def remaining_squares(board)
+    squares = board.unmarked_keys # dependency required
+
+    if squares.size > 2
+      "#{squares[0...-1].join(', ')} or #{squares.last}"
+    else
+      squares.join(' or ')
+    end
+  end
+
+  def marks_square(board, choice)
+    board[choice.to_i] = self.marker # dependency required
+  end
+end
+
+class Computer < Player
+  COMPUTER_NAMES = ['Bender', 'Bishop', 'Data', 'R2D2', 'Roy Batty']
+
+  def set_name
+    self.name = COMPUTER_NAMES.sample
+  end
+
+  def set_marker(opponent)
+    options = ['X', 'O']
+    self.marker = options.reject { |option| option == opponent.marker }.first
+  end
+
+  def moves_against(opponent, board)
+    TTTGame::clear_screen_and_display(board)
+    if self.can_win?
+      self.moves_offensively
+    elsif self.can_defend?(opponent)
+      self.moves_defensively(opponent)
+    else
+      board[board.unmarked_keys.sample] = self.marker # depenency required
+    end
+  end
+
+  def can_win?
+    self.has_two_squares?
+  end
+
+  def moves_offensively # recognize 2 squares marked by self
+    square = winning_square_num
+    board[square] = self.marker
+  end
+
+  def can_defend?(opponent)
+    opponent.has_two_squares?
+  end
+
+  def moves_defensively(opponent) # recognize 2 squares marked by opponent
+    square = opponent.winning_square_num
+    board[square] = self.marker
+  end
+
 end
 
 class TTTGame
   include Displayable
-
-  COMPUTER_NAMES = ['Bender', 'Bishop', 'Data', 'R2D2', 'Roy Batty']
   HELP_BOARD = Board.new.set_help_board
 
   attr_accessor :current_player, :score, :first_to_play
@@ -121,13 +256,13 @@ class TTTGame
 
   def initialize
     @board = Board.new
-    @human = Player.new
-    @computer = Player.new
+    @human = Human.new
+    @computer = Computer.new
     @first_to_play = nil
     @score = { human => 0, computer => 0 }
   end
 
-  def play
+  def play 
     display_greeting_message
     setup_game
     play_game
@@ -153,46 +288,13 @@ class TTTGame
   end
 
   def setup_names
-    set_human_name
-    set_computer_name
-  end
-
-  def set_human_name
-    loop do
-      clear_and_new_line
-      prompt "Please enter your name:"
-      human.name = gets.chomp.capitalize
-      break unless human.name.empty?
-      prompt "Sorry, that's an invalid entry."
-      pause
-    end
-  end
-
-  def set_computer_name
-    computer.name = COMPUTER_NAMES.sample
+    human.set_name
+    computer.set_name
   end
 
   def setup_markers
-    set_human_marker
-    set_computer_marker
-  end
-
-  def set_human_marker
-    loop do
-      clear_and_new_line
-      prompt "Thanks #{human.name}.  You'll be playing with #{computer.name}."
-      prompt "Which marker would you like to play as?  (X or O)"
-      user_marker = gets.chomp.upcase
-      human.marker = user_marker
-      break if ['X', 'O'].include? user_marker
-      prompt "Sorry, that's not a marker.  Please try again."
-      pause
-    end
-  end
-
-  def set_computer_marker
-    options = ['X', 'O']
-    computer.marker = options.reject { |option| option == human.marker }.first
+    human.set_marker(computer)
+    computer.set_marker(human)
   end
 
   def setup_who_starts
@@ -230,16 +332,16 @@ class TTTGame
 
   def play_game
     loop do
-      players_move
+      players_move(board)
       add_point_to_winner
-      display_result
-      break unless play_again?
+      display_result(board)
+      break unless play_again?(board)
       reset
       display_play_again_message
     end
   end
 
-  def clear_screen_and_display_board
+  def clear_screen_and_display(board)
     clear
     display_help_option
     display_scoreboard
@@ -259,6 +361,17 @@ class TTTGame
     puts
   end
 
+  def display_help(board) # helps user identify square numbers
+    clear
+    puts
+    display_scoreboard
+    HELP_BOARD.draw
+    puts
+    puts "          Press (Enter) to begin."
+    gets
+    clear_screen_and_display(board)
+  end
+
   def horizontal_line # corrects for long names
     names_length = human.name.size + computer.name.size + 20
 
@@ -276,124 +389,22 @@ class TTTGame
     ' ' * (human.name.size + 7)
   end
 
-  def players_move
+  def players_move(board)
     loop do
-      clear_screen_and_display_board
-      current_player_moves
+      clear_screen_and_display(board)
+      current_player_moves(board)
       break if board.someone_won? || board.full?
     end
   end
 
-  def current_player_moves
+  def current_player_moves(board)
     if current_player == human
-      human_moves
+      human.moves(board)
       self.current_player = computer
     else
-      computer_moves
+      computer.moves_against(human, board)
       self.current_player = human
     end
-  end
-
-  # rubocop:disable Metrics/MethodLength
-  def human_moves
-    choice = nil # converts to 0 when no value is recieved
-
-    loop do
-      choice = human_picks_square
-      if choice.start_with? 'H'
-        display_help
-        next
-      end
-      break if board.unmarked_keys.include? choice.to_i
-      prompt "Sorry, that's not a valid choice."
-      pause
-    end
-
-    self.set_mark_human_square=(choice) # not an instance variable
-  end
-  # rubocop:enable Metrics/MethodLength
-
-  def human_picks_square
-    display_available_square_choices
-    gets.chomp.upcase
-  end
-
-  def display_available_square_choices
-    clear_screen_and_display_board
-    prompt "Choose a square (#{remaining_squares}):"
-  end
-
-  def remaining_squares
-    squares = board.unmarked_keys
-
-    if squares.size > 2
-      "#{squares[0...-1].join(', ')} or #{squares.last}"
-    else
-      squares.join(' or ')
-    end
-  end
-
-  def set_mark_human_square=(choice)
-    board[choice.to_i] = human.marker
-  end
-
-  def display_help # helps user identify square numbers
-    clear
-    puts
-    display_scoreboard
-    HELP_BOARD.draw
-    puts
-    puts "          Press (Enter) to begin."
-    gets
-    clear_screen_and_display_board
-  end
-
-  def computer_moves
-    clear_screen_and_display_board
-    if computer_can_win?
-      computer_moves_offensive
-    elsif computer_can_defend?
-      computer_moves_defensively
-    else
-      board[board.unmarked_keys.sample] = computer.marker
-    end
-  end
-
-  def computer_can_win?
-    player_has_two_squares?(computer)
-  end
-
-  def computer_moves_offensive # recognize 2 squares marked by self
-    square = winning_square_num(computer)
-    board[square] = computer.marker
-  end
-
-  def computer_can_defend?
-    player_has_two_squares?(human)
-  end
-
-  def computer_moves_defensively # recognize 2 squares marked by opponent
-    square = winning_square_num(human)
-    board[square] = computer.marker
-  end
-
-  def player_has_two_squares?(player)
-    winning_square_num(player).class == Integer
-  end
-
-  def winning_square_num(player)
-    Board::WINNING_LINES.each do |line|
-      squares = board.squares.values_at(*line).map(&:marker)
-
-      if squares.count(player.marker) == 2 &&
-         squares.count(Square::INITIAL_MARKER) == 1
-        return select_empty_square(line)
-      end
-    end
-  end
-
-  def select_empty_square(squares)
-    squares.select { |square| board.squares[square].unmarked? }.first
   end
 
   def add_point_to_winner
@@ -404,8 +415,8 @@ class TTTGame
     score[winner] += 1 if winner
   end
 
-  def display_result
-    clear_screen_and_display_board
+  def display_result(board)
+    clear_screen_and_display(board)
     prompt case board.winning_marker
            when human.marker    then "You win!"
            when computer.marker then "The computer has won!"
@@ -413,7 +424,7 @@ class TTTGame
            end
   end
 
-  def play_again?
+  def play_again?(board)
     answer = nil
 
     loop do
@@ -422,7 +433,7 @@ class TTTGame
       break if !answer.empty? && %(Y N).include?(answer[0])
       prompt "Sorry, I didn't understand that.  Can you rephrase that?"
       pause
-      display_result
+      display_result(board)
     end
 
     answer.start_with? 'Y'
