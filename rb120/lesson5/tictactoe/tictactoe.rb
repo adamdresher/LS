@@ -1,6 +1,7 @@
-module Formatable_Display
-  # HELP_BOARD = Board.new.set_help_board
+require 'pry'
+require 'pry-byebug'
 
+module Formatable_Display
   def clear
     system 'clear'
   end
@@ -40,35 +41,33 @@ module Displayable
     puts "     Press (3) to leave it up to chance."
   end
 
-  def clear_screen_and_display(gameboard, scoreboard)
+  def clear_screen_and_display(game)
     clear
     display_help_option
-    puts horizontal_line(names_length)
-    puts scoreboard
-    puts
-    puts horizontal_line(names_length)
-    puts
-    puts gameboard
-    puts
+    boards = [game.board, game.score]
+
+    boards.each do |board|
+      puts horizontal_line(*game.score.scores.keys) # scoreboard knows players
+      puts
+      puts board.to_s # converts the board arrays to a string first
+      puts
+    end
   end
 
   def display_help_option
     puts "Press (H) for help identifying the square #."
   end
 
-  # def display_scoreboard
-  #   puts horizontal_line
-  #   puts scoreboard
-  #   puts
-  #   puts horizontal_line
-  #   puts
-  # end
-
-  def horizontal_line(names_length) # corrects for long names
-    '-' * [50, names_length].max
+  def horizontal_line(*players) # corrects for long names
+    '-' * line_length(players)
   end
 
-    def display_play_again_message
+  def line_length(players)
+    names_length = players.map { |player| player.name.size }.sum + 20
+    [80, names_length].max
+  end
+
+  def display_play_again_message
     prompt "Okay.  Let's play again!"
     sleep 1
   end
@@ -78,28 +77,45 @@ module Displayable
   end
 end
 
+class Game
+  attr_accessor :board, :score
+
+  def initialize(*players)
+    @board = Gameboard.new(players)
+    @score = Scoreboard.new(players)
+  end
+end
+
 class Gameboard
+  include Displayable
   WINNING_LINES = [[1, 2, 3], [4, 5, 6], [7, 8, 9], # rows
                    [1, 4, 7], [2, 5, 8], [3, 6, 9], # columns
                    [1, 5, 9], [3, 5, 7]]            # diagonals
 
   attr_reader :squares
+  attr_accessor :board_display
 
-  def initialize
+  def initialize(players)
     @squares = {}
     reset
+    @board_display = create
+    format_display(players)
+  end
+
+  def to_s
+    @board_display
   end
 
   def []=(key, marker)
     @squares[key].marker = marker
   end
 
-  def unmarked_keys
-    @squares.keys.select { |square| @squares[square].unmarked? }
-  end
-
   def full?
     unmarked_keys.empty?
+  end
+
+  def unmarked_keys
+    @squares.keys.select { |square| @squares[square].unmarked? }
   end
 
   def someone_won?
@@ -121,31 +137,48 @@ class Gameboard
     (1..9).each { |num| @squares[num] = Square.new }
   end
 
+  def set_helper_nums
+    (1..9).each { |num| @squares[num] = num }
+    self.to_s
+  end
+
+  def remaining_squares
+    squares = unmarked_keys
+
+    if squares.size > 2
+      "#{squares[0...-1].join(', ')} or #{squares.last}"
+    else
+      squares.join(' or ')
+    end
+  end
+
+  private
+
+  def format_display(players)
+    @board_display.map! { |line| line.center(line_length(players) - 9) }
+  end
+
   # rubocop:disable Metrics/AbcSize
   # rubocop:disable Metrics/MethodLength
-  def to_s
-    "              |     |\n\
-           #{@squares[1]}  |  #{@squares[2]}  |  #{@squares[3]}\n\
-              |     |\n\
-         -----------------\n\
-              |     |\n\
-           #{@squares[4]}  |  #{@squares[5]}  |  #{@squares[6]}\n\
-              |     |\n\
-         -----------------\n\
-              |     |\n\
-           #{@squares[7]}  |  #{@squares[8]}  |  #{@squares[9]}\n\
-              |     |"
+  def create
+    @board_display =
+      ["     |     |     ",
+       "  #{@squares[1]}  |  #{@squares[2]}  |  #{@squares[3]}  ",
+       "     |     |     ",
+       "-----------------",
+       "     |     |     ",
+       "  #{@squares[4]}  |  #{@squares[5]}  |  #{@squares[6]}  ",
+       "     |     |     ",
+       "-----------------",
+       "     |     |     ",
+       "  #{@squares[7]}  |  #{@squares[8]}  |  #{@squares[9]}  ",
+       "     |     |     "]
   end
   # rubocop:enable Metrics/AbcSize
   # rubocop:enable Metrics/MethodLength
 
   def all_markers_match?(squares)
     squares.map(&:marker).uniq.size == 1
-  end
-
-  def set_help_board
-    (1..9).each { |num| @squares[num] = num }
-    self
   end
 end
 
@@ -169,51 +202,71 @@ end
 
 class Scoreboard
   include Displayable
-  attr_accessor :score, :human, :computer
+  attr_accessor :scores, :score_display
 
-  def initialize(human, computer)
-    @human = human
-    @computer = computer
-    @score = { human => 0, computer => 0 }
+  def initialize(players)
+    @scores = Hash.new()
+    start_recording(players)
+    format_updated_display
   end
 
   def to_s
-    "\n          #{human.name}       #{computer.name}\n\n\
-#{horizontal_line(names_length)}\n\n\
-  Score:   #{score[human]}#{name_padding}#{score[computer]}\n\n\
-  Marker:  #{human.marker}#{name_padding}#{computer.marker}\n"
+    @score_display
+  end
+
+  def add_point_to(winner)
+    scores[winner][1] += 1 if winner
   end
 
   private
 
+  def start_recording(players)
+    players.each { |player| @scores[player] = 0 }
+  end
+
+  def format_updated_display
+    @score_display = update_display.map do |line|
+                       line.center(line_length(scores.keys) - 8)
+                     end
+  end
+
+  def update_display
+    human, computer = scores.keys
+  
+    updated_display = 
+      ["#{' ' * 9}#{human.name}       #{computer.name}  ",
+       "#{horizontal_line(human, computer)}",
+       "Score:   #{scores[human]}#{name_padding}#{scores[computer]}      ",
+       "Marker:  #{human.marker}#{name_padding}#{computer.marker}      "]
+  end
+
   def name_padding # corrects for long names
-    ' ' * (human.name.size + 7)
+    ' ' * (scores.keys[0].name.size + 7)
   end
 end
 
 class Player
-  include Displayable
   attr_accessor :name, :marker
 
-  private
-
-  def has_two_squares?
-    winning_square_num.class == Integer
+  def has_two_squares?(game)
+    locate_winning_square_num(game).class == Integer
   end
 
-  def winning_square_num
+  def locate_winning_square_num(game)
     Gameboard::WINNING_LINES.each do |line|
-      squares = gameboard.squares.values_at(*line).map(&:marker)
+      squares = game.board.squares.values_at(*line).map(&:marker)
 
-      if squares.count(self.marker) == 2 &&
+      if squares.count(marker) == 2 &&
          squares.count(Square::INITIAL_MARKER) == 1
-        return select_empty_square(line)
+        return select_empty_square(game, line)
       end
     end
   end
 
-  def select_empty_square(squares)
-    squares.select { |square| gameboard.squares[square].unmarked? }.first
+  private
+
+  def select_empty_square(game, squares)
+    squares.select { |square| game.board.squares[square].unmarked? }.first
   end
 end
 
@@ -224,8 +277,8 @@ class Human < Player
     loop do
       clear_and_new_line
       prompt "Please enter your name:"
-      self.name = gets.chomp.capitalize
-      break unless self.name.empty? || name.chars.all? { |char| char == ' ' } # test
+      self.name = gets.strip.capitalize
+      break unless name.empty? || name.chars.all? { |char| char == ' ' }
       prompt "Sorry, that's an invalid entry."
       pause
     end
@@ -244,50 +297,9 @@ class Human < Player
     end
   end
 
-  # # rubocop:disable Metrics/MethodLength
-  # def moves(board)
-  #   choice = nil # converts to 0 when no value is recieved
-
-  #   loop do
-  #     choice = picks_square(board)
-  #     if choice.start_with? 'H'
-  #       # display_help # dependency required TTTGame::display_help
-  #       TTTGame::(board)
-  #       next
-  #     end
-  #     break if board.unmarked_keys.include? choice.to_i # dependency required
-  #     prompt "Sorry, that's not a valid choice."
-  #     pause
-  #   end
-
-  #   self.marks_square(board, choice) # not an instance variable
-  # end
-  # # rubocop:enable Metrics/MethodLength
-
-  def picks_square(gameboard, scoreboard)
-    display_available_square_choices(gameboard, scoreboard)
-    gets.chomp.upcase
-  end
-
-  private
-
-  def display_available_square_choices(gameboard, scoreboard)
-    clear_screen_and_display(gameboard, scoreboard) # needs Formatable_Display
-    prompt "Choose a square (#{remaining_squares(gameboard)}):"
-  end
-
-  def remaining_squares(gameboard)
-    squares = gameboard.unmarked_keys # dependency required
-
-    if squares.size > 2
-      "#{squares[0...-1].join(', ')} or #{squares.last}"
-    else
-      squares.join(' or ')
-    end
-  end
-
-  def marks_square(gameboard, choice)
-    gameboard[choice.to_i] = self.marker # dependency required
+  def marks_square(game, choice)
+    binding.pry
+    game.board[choice.to_i] = marker
   end
 end
 
@@ -303,38 +315,35 @@ class Computer < Player
     self.marker = options.reject { |option| option == opponent.marker }.first
   end
 
-  def can_win?
-    self.has_two_squares?
+  def can_win?(game)
+    has_two_squares?(game)
   end
 
-  def moves_offensively # recognize 2 squares marked by self
-    square = winning_square_num
-    gameboard[square] = self.marker
+  def moves_offensively(game) # recognize 2 squares marked by self
+    square = locate_winning_square_num(game)
+    game.board[square] = marker
   end
 
-  def can_defend?(opponent)
-    opponent.has_two_squares?
+  def can_defend?(game, opponent)
+    opponent.has_two_squares?(game)
   end
 
-  def moves_defensively(opponent) # recognize 2 squares marked by opponent
-    square = opponent.winning_square_num
-    gameboard[square] = self.marker
+  def moves_defensively(game, opponent) # recognize 2 squares marked by opponent
+    square = opponent.locate_winning_square_num(game)
+    game.board[square] = marker
   end
-
 end
 
 class TTTGame
   include Displayable
-  HELP_BOARD = Gameboard.new.set_help_board
-
-  attr_accessor :current_player, :scoreboard, :first_to_play
-  attr_reader :gameboard, :human, :computer
+  attr_accessor :game, :first_to_play, :current_player, :game
+  attr_reader :human, :computer
+  @@help_board = nil # must wait for collaborators to be initialized
+  @@names_length = nil
 
   def initialize
-    @gameboard = Gameboard.new
     @human = Human.new
     @computer = Computer.new
-    @scoreboard = Scoreboard.new(human, computer)
     @first_to_play = nil
   end
 
@@ -345,16 +354,13 @@ class TTTGame
     display_goodbye_message
   end
 
-  def names_length
-    human.name.size + computer.name.size + 20
-  end
-
   private
 
   def setup_game
     setup_names
     setup_markers
     setup_who_starts
+    setup_gameboard_scoreboard_helpboard
   end
 
   def setup_names
@@ -392,70 +398,42 @@ class TTTGame
     choice
   end
 
+  def setup_gameboard_scoreboard_helpboard
+    @@names_length = human.name.size + computer.name.size
+    @game = Game.new(human, computer)
+    @@help_board = Gameboard.new([human, computer]).set_helper_nums
+  end
+
   def play_game
     loop do
       players_move
-      add_point_to_winner
+      game.score.add_point_to(winner)
       display_result
       break unless play_again?
-      reset
+      reset_board
       display_play_again_message
     end
   end
 
-  # def clear_screen_and_display
-  #   clear
-  #   display_help_option
-  #   display_scoreboard
-  #   board.draw
-  #   puts
-  # end
-
-  # def display_help_option
-  #   puts "Press (H) for help identifying the square #."
-  # end
-
-  # def display_scoreboard
-  #   puts horizontal_line
-  #   puts scoreboard
-  #   puts
-  #   puts horizontal_line
-  #   puts
-  # end
-
   def display_help # helps user identify square numbers
     clear
     puts
-    scoreboard.display
-    HELP_BOARD.draw
+    puts horizontal_line([human, computer])
     puts
-    puts "          Press (Enter) to begin."
+    puts @@help_board
+    puts
+    puts game.score.to_s
+    puts
+    puts "Press (Enter) to begin.     ".center(line_length(human, computer))
     gets
-    clear_screen_and_display(gameboard, scoreboard)
+    clear_screen_and_display(game)
   end
-
-  # def horizontal_line # corrects for long names
-  #   names_length = human.name.size + computer.name.size + 20
-
-  #   '-' * [50, names_length].max
-  # end
-
-#   def scoreboard
-#     "\n          #{human.name}       #{computer.name}\n\n\
-# #{horizontal_line}\n\n\
-#   Score:   #{score[human]}#{name_padding}#{score[computer]}\n\n\
-#   Marker:  #{human.marker}#{name_padding}#{computer.marker}\n"
-#   end
-
-  # def name_padding # corrects for long names
-  #   ' ' * (human.name.size + 7)
-  # end
 
   def players_move
     loop do
-      clear_screen_and_display(gameboard, scoreboard)
+      clear_screen_and_display(game)
       current_player_moves
-      break if gameboard.someone_won? || gameboard.full?
+      break if game.board.someone_won? || game.board.full?
     end
   end
 
@@ -469,80 +447,54 @@ class TTTGame
     end
   end
 
-  # # rubocop:disable Metrics/MethodLength
-  # # def moves(board)
-  #   choice = nil # converts to 0 when no value is recieved
-
-  #   loop do
-  #     choice = picks_square(board)
-  #     if choice.start_with? 'H'
-  #       # display_help # dependency required TTTGame::display_help
-  #       TTTGame::(board)
-  #       next
-  #     end
-  #     break if board.unmarked_keys.include? choice.to_i # dependency required
-  #     prompt "Sorry, that's not a valid choice."
-  #     pause
-  #   end
-
-  #   self.marks_square(board, choice) # not an instance variable
-  # end
-  # # rubocop:enable Metrics/MethodLength
-  # rubocop:disable Metrics/MethodLength
   def human_moves
     choice = nil # converts to 0 when no value is recieved
 
     loop do
-      choice = human.picks_square(gameboard, scoreboard)
+      clear_screen_and_display(game)
+      display_available_square_choices
+      choice = gets.chomp.upcase
       if choice.start_with? 'H'
         display_help
         next
       end
-      break if gameboard.unmarked_keys.include? choice.to_i
+      break if game.board.unmarked_keys.include? choice.to_i
       prompt "Sorry, that's not a valid choice."
       pause
     end
 
-    human.marks_square(gameboard, choice) # not an instance variable
+    human.marks_square(game, choice)
   end
-  # rubocop:enable Metrics/MethodLength
 
-  # def moves_against(opponent, board)
-  #   clear_screen_and_display(board)
-  #   if self.can_win?
-  #     self.moves_offensively
-  #   elsif self.can_defend?(opponent)
-  #     self.moves_defensively(opponent)
-  #   else
-  #     board[board.unmarked_keys.sample] = self.marker # depenency required
-  #   end
-  # end
+  def display_available_square_choices
+    prompt "Choose a square (#{game.board.remaining_squares}):"
+  end
 
   def computer_moves_against(opponent)
-    clear_screen_and_display(gameboard, scoreboard)
-    if computer.can_win?
-      computer.moves_offensively
-    elsif computer.can_defend?(opponent)
-      computer.moves_defensively(opponent)
+    clear_screen_and_display(game)
+    # binding.pry
+    if computer.can_win?(game)
+      computer.moves_offensively(game)
+    elsif computer.can_defend?(game, opponent)
+      computer.moves_defensively(game, opponent)
     else
-      gameboard[gameboard.unmarked_keys.sample] = computer.marker
+      game.board[game.board.unmarked_keys.sample] = computer.marker
     end
   end
 
-  def add_point_to_winner
-    winner = case gameboard.winning_marker
-             when human.marker    then human
-             when computer.marker then computer
-             end
-    scoreboard[winner] += 1 if winner
+  def winner
+    case game.board.winning_marker
+    when human.marker    then human
+    when computer.marker then computer
+    end
   end
 
   def display_result
-    clear_screen_and_display(gameboard, scoreboard)
-    prompt case gameboard.winning_marker
-           when human.marker    then "You win!"
-           when computer.marker then "The computer has won!"
-           else                      "It's a tie."
+    clear_screen_and_display(game)
+    prompt case winner
+           when human    then "You win!"
+           when computer then "The computer has won!"
+           else               "It's a tie."
            end
   end
 
@@ -561,8 +513,8 @@ class TTTGame
     answer.start_with? 'Y'
   end
 
-  def reset
-    gameboard.reset
+  def reset_board
+    game.board.reset
     self.current_player = first_to_play
   end
 end
