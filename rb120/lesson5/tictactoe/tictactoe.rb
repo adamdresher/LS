@@ -25,13 +25,16 @@ end
 module Displayable
   include Formatable_Display
 
-  def display_greeting_message
+  def display_greeting_message(*players)
+    greeting = "Welcome to Tic Tac Toe!"
+    continue = "Press (Enter) to begin."
+
     clear
     puts "\n\n\n\n\n\n"
-    puts "          Welcome to Tic Tac Toe!"
+    puts greeting.center(80)
     puts
     puts
-    puts "          Press (Enter) to begin."
+    puts continue.center(80)
     gets
   end
 
@@ -374,7 +377,7 @@ class TTTGame
   end
 
   def play
-    display_greeting_message
+    display_greeting_message(human, computer)
     setup_game
     play_game
     display_goodbye_message
@@ -425,7 +428,6 @@ class TTTGame
   end
 
   def setup_gameboard_scoreboard_helpboard # collaborators required first
-    binding.pry
     @@names_length = human.name.size + computer.name.size
     @game = Gameboard.new(human, computer)
     @@help_id = Gameboard.new(human, computer).set_helper_nums
