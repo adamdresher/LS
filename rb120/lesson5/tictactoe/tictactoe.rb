@@ -1,9 +1,7 @@
 require 'pry'
 require 'pry-byebug'
 
-# greeting is not formatted to 80 char center
-
-module Formatable_Display
+module FormatableDisplay
   def clear
     system 'clear'
   end
@@ -23,9 +21,9 @@ module Formatable_Display
 end
 
 module Displayable
-  include Formatable_Display
+  include FormatableDisplay
 
-  def display_greeting_message(*players)
+  def display_greeting_message
     greeting = "Welcome to Tic Tac Toe!"
     continue = "Press (Enter) to begin."
 
@@ -184,17 +182,17 @@ class Gameboard
   # rubocop:disable Metrics/AbcSize
   # rubocop:disable Metrics/MethodLength
   def generate_display
-      @board = ["     |     |     ",
-                "  #{@squares[1]}  |  #{@squares[2]}  |  #{@squares[3]}  ",
-                "     |     |     ",
-                "-----------------",
-                "     |     |     ",
-                "  #{@squares[4]}  |  #{@squares[5]}  |  #{@squares[6]}  ",
-                "     |     |     ",
-                "-----------------",
-                "     |     |     ",
-                "  #{@squares[7]}  |  #{@squares[8]}  |  #{@squares[9]}  ",
-                "     |     |     "]
+    @board = ["     |     |     ",
+              "  #{@squares[1]}  |  #{@squares[2]}  |  #{@squares[3]}  ",
+              "     |     |     ",
+              "-----------------",
+              "     |     |     ",
+              "  #{@squares[4]}  |  #{@squares[5]}  |  #{@squares[6]}  ",
+              "     |     |     ",
+              "-----------------",
+              "     |     |     ",
+              "  #{@squares[7]}  |  #{@squares[8]}  |  #{@squares[9]}  ",
+              "     |     |     "]
   end
   # rubocop:enable Metrics/AbcSize
   # rubocop:enable Metrics/MethodLength
@@ -256,19 +254,21 @@ class Scoreboard
 
   def format_board # centers score to gameboard; min width of 80 char
     @board.map! do |line|
-                  line.center(line_length(counter.keys) - 9)
-                end # to_s
+      line.center(line_length(counter.keys) - 9)
+    end
   end
 
+  # rubocop:disable Style/RedundantInterpolation
   def generate_board
     human, computer = players
     name_padding = 8 + computer.name.size # counterbalance computer name length
 
     @board = ["#{' ' * name_padding}#{human.name}       #{computer.name}",
-              "#{horizontal_line(human, computer)}",
+              "#{horizontal_line(human, computer)}", # more legible than to_s
               "Score:   #{counter[human]}#{name_buffer}#{counter[computer]}",
               "Marker:  #{human.marker}#{name_buffer}#{computer.marker}"]
   end
+  # rubocop:enable Style/RedundantInterpolation
 
   def name_buffer # corrects for long names
     ' ' * (counter.keys[0].name.size + 6)
@@ -278,7 +278,7 @@ end
 class Player
   attr_accessor :name, :marker
 
-  def has_two_squares?(game)
+  def two_squares?(game)
     locate_winning_square_num(game).class == Integer
   end
 
@@ -303,7 +303,7 @@ end
 class Human < Player
   include Displayable
 
-  def set_name
+  def choose_name
     loop do
       clear_and_new_line
       prompt "Please enter your name:"
@@ -314,10 +314,10 @@ class Human < Player
     end
   end
 
-  def set_marker(opponent)
+  def choose_marker(opponent)
     loop do
       clear_and_new_line
-      prompt "Thanks #{self.name}.  You'll be playing with #{opponent.name}."
+      prompt "Thanks #{name}.  You'll be playing with #{opponent.name}."
       prompt "Which marker would you like to play as?  (X or O)"
       user_marker = gets.chomp.upcase
       self.marker = user_marker
@@ -328,24 +328,24 @@ class Human < Player
   end
 
   def marks_square(game, choice)
-    game[choice.to_i] = self.marker
+    game[choice.to_i] = marker
   end
 end
 
 class Computer < Player
   COMPUTER_NAMES = ['Bender', 'Bishop', 'Data', 'R2D2', 'Roy Batty']
 
-  def set_name
+  def choose_name
     self.name = COMPUTER_NAMES.sample
   end
 
-  def set_marker(opponent)
+  def choose_marker(opponent)
     options = ['X', 'O']
     self.marker = options.reject { |option| option == opponent.marker }.first
   end
 
   def can_win?(game)
-    has_two_squares?(game)
+    two_squares?(game)
   end
 
   def moves_offensively(game) # recognize 2 squares marked by self
@@ -354,12 +354,12 @@ class Computer < Player
   end
 
   def can_defend?(game, opponent)
-    opponent.has_two_squares?(game)
+    opponent.two_squares?(game)
   end
 
   def moves_defensively(game, opponent) # recognize 2 squares marked by opponent
     square = opponent.locate_winning_square_num(game)
-    game[square] = self.marker
+    game[square] = marker
   end
 end
 
@@ -367,6 +367,7 @@ class TTTGame
   include Displayable
   attr_accessor :game, :first_to_play, :current_player
   attr_reader :human, :computer
+
   @@help_id = nil # identify square numbers for user
   @@names_length = nil
 
@@ -377,7 +378,7 @@ class TTTGame
   end
 
   def play
-    display_greeting_message(human, computer)
+    display_greeting_message
     setup_game
     play_game
     display_goodbye_message
@@ -393,13 +394,13 @@ class TTTGame
   end
 
   def setup_names
-    human.set_name
-    computer.set_name
+    human.choose_name
+    computer.choose_name
   end
 
   def setup_markers
-    human.set_marker(computer)
-    computer.set_marker(human)
+    human.choose_marker(computer)
+    computer.choose_marker(human)
   end
 
   def setup_who_starts
