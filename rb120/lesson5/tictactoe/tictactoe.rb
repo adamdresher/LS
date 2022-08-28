@@ -1,6 +1,10 @@
 require 'pry'
 require 'pry-byebug'
 
+# greeting is not formatted to 80 char center
+# points are updating
+# gameboard is displayed properly
+
 module Formatable_Display
   def clear
     system 'clear'
@@ -47,7 +51,7 @@ module Displayable
     boards = [game.board, game.score]
 
     boards.each do |board|
-      puts horizontal_line(*game.score.scores.keys) # scoreboard knows players
+      puts horizontal_line(*game.score.counter.keys) # scoreboard knows players
       puts
       puts board.to_s # converts the board arrays to a string first
       puts
@@ -58,7 +62,7 @@ module Displayable
     puts "Press (H) for help identifying the square #."
   end
 
-  def horizontal_line(*players) # corrects for long names
+  def horizontal_line(*players) # corrects for long names; accepts array args
     '-' * line_length(players)
   end
 
@@ -77,33 +81,51 @@ module Displayable
   end
 end
 
-class Game
-  attr_accessor :board, :score
+# class Game
+#   attr_accessor :board, :score
 
-  def initialize(*players)
-    @board = Gameboard.new(players)
-    @score = Scoreboard.new(players)
-  end
-end
+#   def initialize(*players)
+#     @board = Gameboard.new(players)
+#     @score = Scoreboard.new(players)
+#   end
+# end
 
+# class Gameboard
+#   include Displayable
+#   WINNING_LINES = [[1, 2, 3], [4, 5, 6], [7, 8, 9], # rows
+#                    [1, 4, 7], [2, 5, 8], [3, 6, 9], # columns
+#                    [1, 5, 9], [3, 5, 7]]            # diagonals
+
+#   attr_reader :squares
+#   attr_accessor :board
+
+#   def initialize(players)
+#     @squares = {}
+#     reset
+#     @board = generate_new
+#     format_display_for players
+#   end
 class Gameboard
   include Displayable
   WINNING_LINES = [[1, 2, 3], [4, 5, 6], [7, 8, 9], # rows
                    [1, 4, 7], [2, 5, 8], [3, 6, 9], # columns
                    [1, 5, 9], [3, 5, 7]]            # diagonals
 
-  attr_reader :squares
-  attr_accessor :board_display
+  attr_reader :squares, :players
+  attr_accessor :board, :score
 
-  def initialize(players)
+  def initialize(*players)
+    @players = players
     @squares = {}
     reset
-    @board_display = create
-    format_display(players)
+    @board = generate_display
+    format_display
+    @score = Scoreboard.new(players)
   end
 
-  def to_s
-    @board_display
+  def board
+    generate_display
+    format_display
   end
 
   def []=(key, marker)
@@ -139,7 +161,7 @@ class Gameboard
 
   def set_helper_nums
     (1..9).each { |num| @squares[num] = num }
-    self.to_s
+    self
   end
 
   def remaining_squares
@@ -154,25 +176,24 @@ class Gameboard
 
   private
 
-  def format_display(players)
-    @board_display.map! { |line| line.center(line_length(players) - 9) }
+  def format_display
+    @board.map! { |line| line.center(line_length(players)) }
   end
 
   # rubocop:disable Metrics/AbcSize
   # rubocop:disable Metrics/MethodLength
-  def create
-    @board_display =
-      ["     |     |     ",
-       "  #{@squares[1]}  |  #{@squares[2]}  |  #{@squares[3]}  ",
-       "     |     |     ",
-       "-----------------",
-       "     |     |     ",
-       "  #{@squares[4]}  |  #{@squares[5]}  |  #{@squares[6]}  ",
-       "     |     |     ",
-       "-----------------",
-       "     |     |     ",
-       "  #{@squares[7]}  |  #{@squares[8]}  |  #{@squares[9]}  ",
-       "     |     |     "]
+  def generate_display
+      @board = ["     |     |     ",
+                "  #{@squares[1]}  |  #{@squares[2]}  |  #{@squares[3]}  ",
+                "     |     |     ",
+                "-----------------",
+                "     |     |     ",
+                "  #{@squares[4]}  |  #{@squares[5]}  |  #{@squares[6]}  ",
+                "     |     |     ",
+                "-----------------",
+                "     |     |     ",
+                "  #{@squares[7]}  |  #{@squares[8]}  |  #{@squares[9]}  ",
+                "     |     |     "]
   end
   # rubocop:enable Metrics/AbcSize
   # rubocop:enable Metrics/MethodLength
@@ -202,46 +223,54 @@ end
 
 class Scoreboard
   include Displayable
-  attr_accessor :scores, :score_display
+  attr_reader :players
+  attr_accessor :counter, :board
 
   def initialize(players)
-    @scores = Hash.new()
-    start_recording(players)
-    format_updated_display
+    @counter = Hash.new()
+    @players = players
+    start_recording
+    generate_board
+    format_board
   end
 
   def to_s
-    @score_display
+    @board
+  end
+
+  def board
+    generate_board
+    format_board
   end
 
   def add_point_to(winner)
-    scores[winner][1] += 1 if winner
+    counter[winner] += 1 if winner
   end
 
   private
 
-  def start_recording(players)
-    players.each { |player| @scores[player] = 0 }
+  def start_recording
+    players.each { |player| @counter[player] = 0 }
   end
 
-  def format_updated_display
-    @score_display = update_display.map do |line|
-                       line.center(line_length(scores.keys) - 8)
-                     end
+  def format_board # centers score to gameboard; min width of 80 char
+    @board.map! do |line|
+                  line.center(line_length(counter.keys) - 9)
+                end # to_s
   end
 
-  def update_display
-    human, computer = scores.keys
-  
-    updated_display = 
-      ["#{' ' * 9}#{human.name}       #{computer.name}  ",
-       "#{horizontal_line(human, computer)}",
-       "Score:   #{scores[human]}#{name_padding}#{scores[computer]}      ",
-       "Marker:  #{human.marker}#{name_padding}#{computer.marker}      "]
+  def generate_board
+    human, computer = players
+    name_padding = 8 + computer.name.size # counterbalance computer name length
+
+    @board = ["#{' ' * name_padding}#{human.name}       #{computer.name}",
+              "#{horizontal_line(human, computer)}",
+              "Score:   #{counter[human]}#{name_buffer}#{counter[computer]}",
+              "Marker:  #{human.marker}#{name_buffer}#{computer.marker}"]
   end
 
-  def name_padding # corrects for long names
-    ' ' * (scores.keys[0].name.size + 7)
+  def name_buffer # corrects for long names
+    ' ' * (counter.keys[0].name.size + 6)
   end
 end
 
@@ -254,7 +283,7 @@ class Player
 
   def locate_winning_square_num(game)
     Gameboard::WINNING_LINES.each do |line|
-      squares = game.board.squares.values_at(*line).map(&:marker)
+      squares = game.squares.values_at(*line).map(&:marker)
 
       if squares.count(marker) == 2 &&
          squares.count(Square::INITIAL_MARKER) == 1
@@ -266,7 +295,7 @@ class Player
   private
 
   def select_empty_square(game, squares)
-    squares.select { |square| game.board.squares[square].unmarked? }.first
+    squares.select { |square| game.squares[square].unmarked? }.first
   end
 end
 
@@ -298,8 +327,7 @@ class Human < Player
   end
 
   def marks_square(game, choice)
-    binding.pry
-    game.board[choice.to_i] = marker
+    game[choice.to_i] = self.marker
   end
 end
 
@@ -321,7 +349,7 @@ class Computer < Player
 
   def moves_offensively(game) # recognize 2 squares marked by self
     square = locate_winning_square_num(game)
-    game.board[square] = marker
+    game[square] = marker
   end
 
   def can_defend?(game, opponent)
@@ -330,15 +358,15 @@ class Computer < Player
 
   def moves_defensively(game, opponent) # recognize 2 squares marked by opponent
     square = opponent.locate_winning_square_num(game)
-    game.board[square] = marker
+    game[square] = self.marker
   end
 end
 
 class TTTGame
   include Displayable
-  attr_accessor :game, :first_to_play, :current_player, :game
+  attr_accessor :game, :first_to_play, :current_player
   attr_reader :human, :computer
-  @@help_board = nil # must wait for collaborators to be initialized
+  @@help_id = nil # identify square numbers for user
   @@names_length = nil
 
   def initialize
@@ -398,16 +426,17 @@ class TTTGame
     choice
   end
 
-  def setup_gameboard_scoreboard_helpboard
+  def setup_gameboard_scoreboard_helpboard # collaborators required first
+    binding.pry
     @@names_length = human.name.size + computer.name.size
-    @game = Game.new(human, computer)
-    @@help_board = Gameboard.new([human, computer]).set_helper_nums
+    @game = Gameboard.new(human, computer)
+    @@help_id = Gameboard.new(human, computer).set_helper_nums
   end
 
   def play_game
     loop do
       players_move
-      game.score.add_point_to(winner)
+      game.score.add_point_to winner
       display_result
       break unless play_again?
       reset_board
@@ -415,25 +444,11 @@ class TTTGame
     end
   end
 
-  def display_help # helps user identify square numbers
-    clear
-    puts
-    puts horizontal_line([human, computer])
-    puts
-    puts @@help_board
-    puts
-    puts game.score.to_s
-    puts
-    puts "Press (Enter) to begin.     ".center(line_length(human, computer))
-    gets
-    clear_screen_and_display(game)
-  end
-
   def players_move
     loop do
-      clear_screen_and_display(game)
+      clear_screen_and_display game
       current_player_moves
-      break if game.board.someone_won? || game.board.full?
+      break if game.someone_won? || game.full?
     end
   end
 
@@ -442,7 +457,7 @@ class TTTGame
       human_moves
       self.current_player = computer
     else
-      computer_moves_against(human)
+      computer_moves_against human
       self.current_player = human
     end
   end
@@ -451,46 +466,61 @@ class TTTGame
     choice = nil # converts to 0 when no value is recieved
 
     loop do
-      clear_screen_and_display(game)
+      clear_screen_and_display game
       display_available_square_choices
       choice = gets.chomp.upcase
       if choice.start_with? 'H'
         display_help
         next
       end
-      break if game.board.unmarked_keys.include? choice.to_i
+      break if game.unmarked_keys.include? choice.to_i
       prompt "Sorry, that's not a valid choice."
       pause
     end
-
     human.marks_square(game, choice)
   end
 
   def display_available_square_choices
-    prompt "Choose a square (#{game.board.remaining_squares}):"
+    prompt "Choose a square (#{game.remaining_squares}):"
+  end
+
+  def display_help # helps user identify square numbers
+    clear
+    puts
+    boards = [@@help_id.board, game.score.board]
+
+    boards.each do |board|
+      puts horizontal_line(human, computer)
+      puts
+      puts board
+      puts
+    end
+
+    puts "Press (Enter) to begin.     ".center(line_length([human, computer]))
+    gets
+    clear_screen_and_display game
   end
 
   def computer_moves_against(opponent)
-    clear_screen_and_display(game)
-    # binding.pry
-    if computer.can_win?(game)
+    clear_screen_and_display game
+    if computer.can_win? game
       computer.moves_offensively(game)
     elsif computer.can_defend?(game, opponent)
       computer.moves_defensively(game, opponent)
     else
-      game.board[game.board.unmarked_keys.sample] = computer.marker
+      game[game.unmarked_keys.sample] = computer.marker
     end
   end
 
   def winner
-    case game.board.winning_marker
+    case game.winning_marker
     when human.marker    then human
     when computer.marker then computer
     end
   end
 
   def display_result
-    clear_screen_and_display(game)
+    clear_screen_and_display game
     prompt case winner
            when human    then "You win!"
            when computer then "The computer has won!"
@@ -514,7 +544,7 @@ class TTTGame
   end
 
   def reset_board
-    game.board.reset
+    game.reset
     self.current_player = first_to_play
   end
 end
