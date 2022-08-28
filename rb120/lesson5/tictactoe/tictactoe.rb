@@ -2,8 +2,6 @@ require 'pry'
 require 'pry-byebug'
 
 # greeting is not formatted to 80 char center
-# points are updating
-# gameboard is displayed properly
 
 module Formatable_Display
   def clear
@@ -48,12 +46,12 @@ module Displayable
   def clear_screen_and_display(game)
     clear
     display_help_option
-    boards = [game.board, game.score]
+    boards = [game.board, game.score.board]
 
     boards.each do |board|
       puts horizontal_line(*game.score.counter.keys) # scoreboard knows players
       puts
-      puts board.to_s # converts the board arrays to a string first
+      puts board # converts the board arrays to a string first
       puts
     end
   end
