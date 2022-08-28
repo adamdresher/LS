@@ -1,6 +1,3 @@
-require 'pry'
-require 'pry-byebug'
-
 module FormatableDisplay
   def clear
     system 'clear'
@@ -28,7 +25,7 @@ module Displayable
     continue = "Press (Enter) to begin."
 
     clear
-    puts "\n\n\n\n\n\n"
+    7.times { puts }
     puts greeting.center(80)
     puts
     puts
@@ -50,9 +47,9 @@ module Displayable
     boards = [game.board, game.score.board]
 
     boards.each do |board|
-      puts horizontal_line(*game.score.counter.keys) # scoreboard knows players
+      puts horizontal_line(*game.players)
       puts
-      puts board # converts the board arrays to a string first
+      puts board
       puts
     end
   end
@@ -80,30 +77,6 @@ module Displayable
   end
 end
 
-# class Game
-#   attr_accessor :board, :score
-
-#   def initialize(*players)
-#     @board = Gameboard.new(players)
-#     @score = Scoreboard.new(players)
-#   end
-# end
-
-# class Gameboard
-#   include Displayable
-#   WINNING_LINES = [[1, 2, 3], [4, 5, 6], [7, 8, 9], # rows
-#                    [1, 4, 7], [2, 5, 8], [3, 6, 9], # columns
-#                    [1, 5, 9], [3, 5, 7]]            # diagonals
-
-#   attr_reader :squares
-#   attr_accessor :board
-
-#   def initialize(players)
-#     @squares = {}
-#     reset
-#     @board = generate_new
-#     format_display_for players
-#   end
 class Gameboard
   include Displayable
   WINNING_LINES = [[1, 2, 3], [4, 5, 6], [7, 8, 9], # rows
@@ -111,7 +84,7 @@ class Gameboard
                    [1, 5, 9], [3, 5, 7]]            # diagonals
 
   attr_reader :squares, :players
-  attr_accessor :board, :score
+  attr_accessor :score
 
   def initialize(*players)
     @players = players
@@ -179,7 +152,6 @@ class Gameboard
     @board.map! { |line| line.center(line_length(players)) }
   end
 
-  # rubocop:disable Metrics/AbcSize
   # rubocop:disable Metrics/MethodLength
   def generate_display
     @board = ["     |     |     ",
@@ -194,7 +166,6 @@ class Gameboard
               "  #{@squares[7]}  |  #{@squares[8]}  |  #{@squares[9]}  ",
               "     |     |     "]
   end
-  # rubocop:enable Metrics/AbcSize
   # rubocop:enable Metrics/MethodLength
 
   def all_markers_match?(squares)
@@ -222,19 +193,18 @@ end
 
 class Scoreboard
   include Displayable
-  attr_reader :players
-  attr_accessor :counter, :board
+  attr_accessor :counter
 
   def initialize(players)
-    @counter = Hash.new()
     @players = players
+    @counter = Hash.new()
     start_recording
     generate_board
     format_board
   end
 
   def to_s
-    @board
+    board
   end
 
   def board
@@ -248,13 +218,15 @@ class Scoreboard
 
   private
 
+  attr_reader :players
+
   def start_recording
     players.each { |player| @counter[player] = 0 }
   end
 
   def format_board # centers score to gameboard; min width of 80 char
     @board.map! do |line|
-      line.center(line_length(counter.keys) - 9)
+      line.center(line_length(players) - 9)
     end
   end
 
@@ -271,7 +243,7 @@ class Scoreboard
   # rubocop:enable Style/RedundantInterpolation
 
   def name_buffer # corrects for long names
-    ' ' * (counter.keys[0].name.size + 6)
+    ' ' * (players[0].name.size + 6)
   end
 end
 
@@ -335,11 +307,15 @@ end
 class Computer < Player
   COMPUTER_NAMES = ['Bender', 'Bishop', 'Data', 'R2D2', 'Roy Batty']
 
+  def initialize(opponent)
+    @opponent = opponent
+  end
+
   def choose_name
     self.name = COMPUTER_NAMES.sample
   end
 
-  def choose_marker(opponent)
+  def choose_marker
     options = ['X', 'O']
     self.marker = options.reject { |option| option == opponent.marker }.first
   end
@@ -353,14 +329,22 @@ class Computer < Player
     game[square] = marker
   end
 
-  def can_defend?(game, opponent)
+  def can_defend?(game)
     opponent.two_squares?(game)
   end
 
-  def moves_defensively(game, opponent) # recognize 2 squares marked by opponent
+  def moves_defensively(game) # recognize 2 squares marked by opponent
     square = opponent.locate_winning_square_num(game)
     game[square] = marker
   end
+
+  def moves_randomly(game)
+    game[game.unmarked_keys.sample] = marker
+  end
+
+  private
+
+  attr_reader :opponent
 end
 
 class TTTGame
@@ -373,7 +357,7 @@ class TTTGame
 
   def initialize
     @human = Human.new
-    @computer = Computer.new
+    @computer = Computer.new(human) # learns opponent
     @first_to_play = nil
   end
 
@@ -400,7 +384,7 @@ class TTTGame
 
   def setup_markers
     human.choose_marker(computer)
-    computer.choose_marker(human)
+    computer.choose_marker
   end
 
   def setup_who_starts
@@ -458,34 +442,35 @@ class TTTGame
       human_moves
       self.current_player = computer
     else
-      computer_moves_against human
+      computer_moves
       self.current_player = human
     end
   end
 
+  # rubocop:disable Metrics/MethodLength
   def human_moves
     choice = nil # converts to 0 when no value is recieved
 
     loop do
-      clear_screen_and_display game
-      display_available_square_choices
+      clear_screen_and_display_options
       choice = gets.chomp.upcase
       if choice.start_with? 'H'
-        display_help
+        enter_help_display
         next
       end
       break if game.unmarked_keys.include? choice.to_i
-      prompt "Sorry, that's not a valid choice."
-      pause
+      display_retry_and_pause
     end
     human.marks_square(game, choice)
   end
+  # rubocop:enable Metrics/MethodLength
 
-  def display_available_square_choices
+  def clear_screen_and_display_options
+    clear_screen_and_display game
     prompt "Choose a square (#{game.remaining_squares}):"
   end
 
-  def display_help # helps user identify square numbers
+  def enter_help_display
     clear
     puts
     boards = [@@help_id.board, game.score.board]
@@ -497,19 +482,28 @@ class TTTGame
       puts
     end
 
+    exit_help_display
+  end
+
+  def exit_help_display
     puts "Press (Enter) to begin.     ".center(line_length([human, computer]))
     gets
     clear_screen_and_display game
   end
 
-  def computer_moves_against(opponent)
+  def display_retry_and_pause
+    prompt "Sorry, that's not a valid choice."
+    pause
+  end
+
+  def computer_moves
     clear_screen_and_display game
     if computer.can_win? game
       computer.moves_offensively(game)
-    elsif computer.can_defend?(game, opponent)
-      computer.moves_defensively(game, opponent)
+    elsif computer.can_defend?(game)
+      computer.moves_defensively(game)
     else
-      game[game.unmarked_keys.sample] = computer.marker
+      computer.moves_randomly(game)
     end
   end
 
