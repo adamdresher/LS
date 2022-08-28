@@ -15,6 +15,15 @@ module FormatableDisplay
   def prompt(msg)
     puts "=> #{msg}"
   end
+
+  def horizontal_line(*players) # corrects for long names; accepts array args
+    '-' * line_length(players)
+  end
+
+  def line_length(players)
+    names_length = players.map { |player| player.name.size }.sum + 20
+    [80, names_length].max
+  end
 end
 
 module Displayable
@@ -58,13 +67,9 @@ module Displayable
     puts "Press (H) for help identifying the square #."
   end
 
-  def horizontal_line(*players) # corrects for long names; accepts array args
-    '-' * line_length(players)
-  end
-
-  def line_length(players)
-    names_length = players.map { |player| player.name.size }.sum + 20
-    [80, names_length].max
+  def display_retry_and_pause
+    prompt "Sorry, that's not a valid choice."
+    pause
   end
 
   def display_play_again_message
@@ -461,6 +466,7 @@ class TTTGame
       break if game.unmarked_keys.include? choice.to_i
       display_retry_and_pause
     end
+
     human.marks_square(game, choice)
   end
   # rubocop:enable Metrics/MethodLength
@@ -489,11 +495,6 @@ class TTTGame
     puts "Press (Enter) to begin.     ".center(line_length([human, computer]))
     gets
     clear_screen_and_display game
-  end
-
-  def display_retry_and_pause
-    prompt "Sorry, that's not a valid choice."
-    pause
   end
 
   def computer_moves
