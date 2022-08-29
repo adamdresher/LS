@@ -1,5 +1,3 @@
-require 'pry'
-require 'pry-byebug'
 require 'yaml'
 
 MESSAGES = YAML.load_file('twentyone_messages.yml')
