@@ -1,4 +1,4 @@
-greetings: "Welcome to Blackjack!"
+greetings: " Welcome to Blackjack!"
 continue: "Press (ENTER) to continue."
 new_game?: "Press (N) for a new game        "
 display_rules?: "Press (R) to read the game rules"
