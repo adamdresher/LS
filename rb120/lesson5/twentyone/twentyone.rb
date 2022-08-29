@@ -1,3 +1,5 @@
+require 'pry'
+require 'pry-byebug'
 require 'yaml'
 
 MESSAGES = YAML.load_file('twentyone_messages.yml')
@@ -32,10 +34,10 @@ module Displayable
   end
 
   def pause(time)
-    sleep(time)
+    sleep time
   end
 
-  def confirm(msg, alignment = :left)
+  def enter_any_key(msg, alignment = :left)
     new_line
     alignment == :left ? prompt_yaml(msg) : puts_yaml_center(msg)
     gets
@@ -61,7 +63,7 @@ module Hand
   end
 
   def displays_hand(show_first_card = true) # can hide a card
-    hand = hand_with_articles
+    hand = prepends_with_articles
     hand = hides_first_card unless show_first_card
 
     if hand.size > 2
@@ -71,15 +73,14 @@ module Hand
     end
   end
 
-  def score # total points in hand
+  def score
     num_of_aces = hand.count { |card| card.rank == :Ace }
-    cards_scored = cards_initial_score
-    cards_reevaluated_for_aces(cards_scored, num_of_aces).sum
+    cards_reevaluated_for_aces(cards_initial_score, num_of_aces).sum
   end
 
   private
 
-  def hand_with_articles
+  def prepends_with_articles
     hand.map { |card| card.with_article.to_s }
   end
 
@@ -108,20 +109,18 @@ module Hand
   end
 end
 
-# reads better with prepending self keywords
-# rubocop:disable Style/RedundantSelf
 class Player
   include Displayable
   include Hand
-  attr_accessor :name
+  attr_accessor :name, :stay
 
   def initialize
     super # from Hand
-    @stay = false # false means turn is not over, true means turn is over
+    @stay = false # true means turn is over
   end
 
   def to_s
-    self.name
+    name
   end
 
   def set_name
@@ -130,8 +129,8 @@ class Player
 
     loop do
       display_name_request_again if try_again
-      self.name = gets.chomp.capitalize
-      break unless name.empty?
+      self.name = gets.strip.chomp.split.map(&:capitalize).join(' ')
+      break unless name.strip.empty?
       try_again = true
       pause 0.5
       clear_and_new_line
@@ -155,58 +154,59 @@ class Player
       display_try_again(choice.empty?)
     end
 
-    self.stays if choice.start_with? 'S'
-    self.hits(deck) if choice.start_with? 'H'
+    stays if choice.start_with? 'S'
+    hits(deck) if choice.start_with? 'H'
   end
 
   def hits(deck) # mutates the deck
     card = deck.cards.pop
     hand << card
-    prompt "#{self.name} draws #{card.with_article}."
+    prompt "#{name} draws #{card.with_article}."
   end
 
   def stays
-    @stay = true
+    self.stay = true
   end
 
   def stays?
-    @stay
+    stay
   end
 
   def busts?
-    self.score > 21
+    score > 21
   end
 
   def return_cards
     super
-    @stay = false
+    self.stay = false
   end
 end
 
 class Dealer < Player
   AI_NAMES = ['Bender', 'Faye', 'Roy Batty', 'Data', 'Bishop', 'Dot Matrix']
-  attr_writer :reveals_hidden_card
+
+  attr_accessor :reveals_hidden_card
 
   def set_name
     self.name = AI_NAMES.sample
   end
 
   def chooses_move(deck)
-    self.score < 17 ? self.hits(deck) : self.stays
     self.reveals_hidden_card = true
+    score < 17 ? hits(deck) : stays
   end
 
   def secret_hand
-    if self.reveals_hidden_card?
-      self.displays_hand
+    if reveals_hidden_card?
+      displays_hand
     else
-      self.displays_hand(false)
+      displays_hand(false)
     end
   end
 
   def secret_score
-    if self.reveals_hidden_card?
-      self.score
+    if reveals_hidden_card?
+      score
     else
       '???'
     end
@@ -217,17 +217,14 @@ class Dealer < Player
     self.reveals_hidden_card = false
   end
 
-  private
-
   def reveals_hidden_card?
-    @reveals_hidden_card
+    reveals_hidden_card
   end
 end
-# rubocop:enable Style/RedundantSelf
 
 class Deck
-  SUITS = [:Spade, :Heart, :Club, :Diamond]
-  RANKS = [2, 3, 4, 5, 6, 7, 8, 9, 10, :Jack, :Queen, :King, :Ace]
+  # SUITS = [:Spade, :Heart, :Club, :Diamond]
+  # RANKS = [2, 3, 4, 5, 6, 7, 8, 9, 10, :Jack, :Queen, :King, :Ace]
 
   attr_reader :cards
 
@@ -236,17 +233,20 @@ class Deck
   end
 
   def reset
-    @cards = SUITS.map do |suit|
-      RANKS.map { |rank| Card.new(suit, rank) }
+    @cards = Card::SUITS.map do |suit|
+      Card::RANKS.map { |rank| Card.new(suit, rank) }
     end.flatten
   end
 
   def shuffle!
-    @cards.shuffle!
+    cards.shuffle!
   end
 end
 
 class Card
+  SUITS = [:Spade, :Heart, :Club, :Diamond]
+  RANKS = [2, 3, 4, 5, 6, 7, 8, 9, 10, :Jack, :Queen, :King, :Ace]
+
   attr_reader :suit, :rank
 
   def initialize(suit, rank)
@@ -289,12 +289,13 @@ class TwentyOneGame
 
   def display_greetings_message
     display_splash_screen
-    confirm('continue', :centered)
+    enter_any_key('continue', :centered)
   end
 
   def display_splash_screen
     clear_and_new_line 5
     puts_yaml_center 'greetings'
+    new_line
     puts UNICODE_SUITS.join('  ').center(80)
   end
 
@@ -344,14 +345,14 @@ class TwentyOneGame
     clear_and_new_line 7
     puts_yaml_center 'game_rules1'
     puts_yaml_center 'game_rules2'
-    confirm('continue', :centered)
+    enter_any_key('continue', :centered)
   end
 
   def setup_game
     new_line
     collect_cards
     shuffle_cards
-    confirm('begin')
+    enter_any_key('begin')
   end
 
   def collect_cards
@@ -363,11 +364,9 @@ class TwentyOneGame
   def play_game
     clear
     deal_cards
-    new_line
     display_cards
     new_line
     players_take_turns(deck)
-    new_line
     display_winner
   end
 
@@ -395,10 +394,16 @@ class TwentyOneGame
     end
   end
 
+  # use yaml string interpolation
+  # rubocop:disable Metrics/AbcSize
   def display_cards
+    ask_dealer_reveal_cards if user.busts?
+
+    new_line
     prompt "#{user.name} has #{user.displays_hand}. (#{user.score})"
     prompt "#{dealer.name} has #{dealer.secret_hand}. (#{dealer.secret_score})"
   end
+  # rubocop:enable Metrics/AbcSize
 
   def players_take_turns(deck)
     [user, dealer].each do |player|
@@ -412,7 +417,6 @@ class TwentyOneGame
       new_line
       player.chooses_move(deck)
       break if player.stays?
-      new_line
       display_cards
       break if player.busts?
       pause 1.5
@@ -421,11 +425,28 @@ class TwentyOneGame
   end
 
   def display_winner
+    ask_dealer_show_cards if dealer.hand.size == 2 && !user.busts?
+    new_line
+
     if winner
       prompt "#{winner} wins the game!"
     else
-      prompt "Tie goes to the #{dealer}, suck it."
+      prompt "Tie goes to the dealer, #{dealer}!"
     end
+  end
+
+  def display_busts
+    prompt "#{user} busts!" if user.busts?
+    prompt "#{dealer} busts!" if dealer.busts?
+  end
+
+  def ask_dealer_show_cards
+    ask_dealer_reveal_cards
+    display_cards
+  end
+
+  def ask_dealer_reveal_cards
+    dealer.reveals_hidden_card = true
   end
 
   def winner
@@ -445,7 +466,7 @@ class TwentyOneGame
     choice = nil
 
     loop do
-      prompt_yaml 'play_again?'
+      display_play_again
       choice = gets.chomp.upcase
       break if choices.include? choice[0]
       new_line
@@ -453,6 +474,11 @@ class TwentyOneGame
     end
 
     choice[0] == 'Y'
+  end
+
+  def display_play_again
+    new_line
+    prompt_yaml 'play_again?'
   end
 
   def display_goodbye_message
