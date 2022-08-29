@@ -2,10 +2,7 @@ require 'yaml'
 
 MESSAGES = YAML.load_file('twentyone_messages.yml')
 
-module Displayable
-  UNICODE_SUITS = [[9828].pack('U*'), [9825].pack('U*'),
-                   [9831].pack('U*'), [9826].pack('U*')]
-
+module Formatable
   def clear
     system 'clear'
   end
@@ -14,7 +11,7 @@ module Displayable
     num.times { puts }
   end
 
-  def clear_and_new_line(quantity=1)
+  def clear_and_new_line(quantity = 1)
     clear
     new_line quantity
   end
@@ -46,6 +43,68 @@ module Displayable
     choice = choice_empty ? choices[0] : choices[1..-1].sample
 
     prompt_yaml choice
+  end
+end
+
+module Displayable
+  UNICODE_SUITS = [[9828].pack('U*'), [9825].pack('U*'),
+                   [9831].pack('U*'), [9826].pack('U*')]
+
+  def display_greetings_message
+    display_splash_screen
+    enter_any_key('continue', :centered)
+  end
+
+  def display_splash_screen
+    clear_and_new_line 5
+    puts_yaml_center 'greetings'
+    new_line
+    puts UNICODE_SUITS.join('  ').center(80)
+  end
+
+  def display_menu
+    display_splash_screen
+    new_line 2
+    puts_yaml_center 'new_game?'
+    puts_yaml_center 'display_rules?'
+  end
+
+  def display_introductions(user, dealer)
+    clear_and_new_line
+    prompt "Welcome to the blackjack table, #{user.name}."
+    pause 1
+    prompt "My name is #{dealer.name} and I will be your dealer for this game."
+    pause 0.5
+    puts "   (btw, does it annoy you when people speak in third person?)"
+    pause 1.5
+  end
+
+  def display_game_rules
+    clear_and_new_line 7
+    puts_yaml_center 'game_rules1'
+    puts_yaml_center 'game_rules2'
+    enter_any_key('continue', :centered)
+  end
+
+  def display_shuffling
+    print "=> Shuffling "
+
+    15.times do
+      print '.'
+      sleep 0.1
+    end
+
+    puts " FINISHED!"
+    sleep 1
+  end
+
+  def display_play_again
+    new_line
+    prompt_yaml 'play_again?'
+  end
+
+  def display_goodbye_message
+    prompt_yaml 'goodbye'
   end
 end
 
@@ -108,7 +167,7 @@ module Hand
 end
 
 class Player
-  include Displayable
+  include Formatable
   include Hand
   attr_accessor :name, :stay
 
@@ -262,6 +321,7 @@ class Card
 end
 
 class TwentyOneGame
+  include Formatable
   include Displayable
   attr_accessor :deck, :user, :dealer
 
@@ -285,18 +345,6 @@ class TwentyOneGame
 
   private
 
-  def display_greetings_message
-    display_splash_screen
-    enter_any_key('continue', :centered)
-  end
-
-  def display_splash_screen
-    clear_and_new_line 5
-    puts_yaml_center 'greetings'
-    new_line
-    puts UNICODE_SUITS.join('  ').center(80)
-  end
-
   # rubocop:disable Metrics/MethodLength
   def game_menu
     choices = ['N', 'R'] # (N)ew game or (R))ules
@@ -315,35 +363,11 @@ class TwentyOneGame
   end
   # rubocop:enable Metrics/MethodLength
 
-  def display_menu
-    display_splash_screen
-    new_line 2
-    puts_yaml_center 'new_game?'
-    puts_yaml_center 'display_rules?'
-  end
-
   def greet_dealer
     clear_and_new_line
     user.set_name
     dealer.set_name
     display_introductions(user, dealer)
-  end
-
-  def display_introductions(user, dealer)
-    clear_and_new_line
-    prompt "Welcome to the blackjack table, #{user.name}."
-    pause 1
-    prompt "My name is #{dealer.name} and I will be your dealer for this game."
-    pause 0.5
-    puts "   (btw, does it annoy you when people speak in third person?)"
-    pause 1.5
-  end
-
-  def display_game_rules
-    clear_and_new_line 7
-    puts_yaml_center 'game_rules1'
-    puts_yaml_center 'game_rules2'
-    enter_any_key('continue', :centered)
   end
 
   def setup_game
@@ -371,18 +395,6 @@ class TwentyOneGame
   def shuffle_cards
     deck.shuffle!
     display_shuffling
-  end
-
-  def display_shuffling
-    print "=> Shuffling "
-
-    15.times do
-      print '.'
-      sleep 0.1
-    end
-
-    puts " FINISHED!"
-    sleep 1
   end
 
   def deal_cards # 2 cards to each player
@@ -472,15 +484,6 @@ class TwentyOneGame
     end
 
     choice[0] == 'Y'
-  end
-
-  def display_play_again
-    new_line
-    prompt_yaml 'play_again?'
-  end
-
-  def display_goodbye_message
-    prompt_yaml 'goodbye'
   end
 end
 
