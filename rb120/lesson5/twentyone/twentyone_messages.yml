@@ -17,3 +17,7 @@ try_again6: "Please reconsider your answer."
 try_again7: "My apologies, your answer does not fit any of my programmed responses."
 play_again?: "Would you like to play again? (Y or N)"
 goodbye: "Thanks for playing!  Goodbye."
+
+intro1: Welcome to the blackjack table, %name.
+intro2: My name is %name and I will be your dealer for this game.
+intro3:  (btw, does it annoy you when people speak in third person?)

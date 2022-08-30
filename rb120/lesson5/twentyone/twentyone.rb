@@ -28,6 +28,10 @@ module Formatable
     puts MESSAGES[msg].center(80)
   end
 
+  def puts_yaml_with_var(msg, *vars)
+    puts format(MESSAGES['msg'], *vars)
+  end
+
   def pause(time)
     sleep time
   end
@@ -71,11 +75,16 @@ module Displayable
 
   def display_introductions(user, dealer)
     clear_and_new_line
-    prompt "Welcome to the blackjack table, #{user.name}."
+    # prompt "Welcome to the blackjack table, #{user.name}."
+    # puts_yaml_with_var('intro1', name: user.name)
+    puts format(MESSAGES['intro1'], name: user.name)
     pause 1
-    prompt "My name is #{dealer.name} and I will be your dealer for this game."
+    # prompt "My name is #{dealer.name} and I will be your dealer for this game."
+    puts_yaml_with_var('intro2', name: dealer.name)
+    My name is #{dealer.name} and I will be your dealer for this game.
     pause 0.5
-    puts "   (btw, does it annoy you when people speak in third person?)"
+    # puts "   (btw, does it annoy you when people speak in third person?)
+    puts_yaml_with_var('intro3')
     pause 1.5
   end
 
@@ -169,7 +178,7 @@ end
 class Player
   include Formatable
   include Hand
-  attr_accessor :name, :stay
+  attr_reader :name
 
   def initialize
     super # from Hand
@@ -186,7 +195,7 @@ class Player
 
     loop do
       display_name_request_again if try_again
-      self.name = gets.strip.chomp.split.map(&:capitalize).join(' ')
+      self.name = gets.strip.split.map(&:capitalize).join(' ')
       break unless name.strip.empty?
       try_again = true
       pause 0.5
@@ -237,12 +246,17 @@ class Player
     super
     self.stay = false
   end
+
+  private
+
+  attr_accessor :stay
+  attr_writer :name
 end
 
 class Dealer < Player
   AI_NAMES = ['Bender', 'Faye', 'Roy Batty', 'Data', 'Bishop', 'Dot Matrix']
 
-  attr_accessor :reveals_hidden_card
+  attr_writer :reveals_hidden_card
 
   def set_name
     self.name = AI_NAMES.sample
@@ -275,14 +289,11 @@ class Dealer < Player
   end
 
   def reveals_hidden_card?
-    reveals_hidden_card
+    @reveals_hidden_card
   end
 end
 
 class Deck
-  # SUITS = [:Spade, :Heart, :Club, :Diamond]
-  # RANKS = [2, 3, 4, 5, 6, 7, 8, 9, 10, :Jack, :Queen, :King, :Ace]
-
   attr_reader :cards
 
   def initialize
@@ -315,7 +326,7 @@ class Card
     "#{rank} of #{suit}"
   end
 
-  def with_article # applies with correct grammar
+  def with_article
     [:Ace, 8].include?(rank) ? "an #{self}" : "a #{self}"
   end
 end
@@ -334,7 +345,7 @@ class TwentyOneGame
   def play
     display_greetings_message
     game_menu
-    greet_dealer
+    introduce_players
     loop do
       setup_game
       play_game
@@ -344,6 +355,8 @@ class TwentyOneGame
   end
 
   private
+
+  # setup logic
 
   # rubocop:disable Metrics/MethodLength
   def game_menu
@@ -363,7 +376,7 @@ class TwentyOneGame
   end
   # rubocop:enable Metrics/MethodLength
 
-  def greet_dealer
+  def introduce_players
     clear_and_new_line
     user.set_name
     dealer.set_name
@@ -383,6 +396,13 @@ class TwentyOneGame
     deck.reset
   end
 
+  def shuffle_cards
+    deck.shuffle!
+    display_shuffling
+  end
+
+  # playing logic
+
   def play_game
     clear
     deal_cards
@@ -390,11 +410,6 @@ class TwentyOneGame
     new_line
     players_take_turns(deck)
     display_winner
-  end
-
-  def shuffle_cards
-    deck.shuffle!
-    display_shuffling
   end
 
   def deal_cards # 2 cards to each player
@@ -434,6 +449,23 @@ class TwentyOneGame
     puts "#{player.name} stays." if player.stays?
   end
 
+  def play_again?
+    choices = ['Y', 'N'] # (Y)es or (N)o
+    choice = nil
+
+    loop do
+      display_play_again
+      choice = gets.chomp.upcase
+      break if choices.include? choice[0]
+      new_line
+      display_try_again(choice.empty?)
+    end
+
+    choice[0] == 'Y'
+  end
+
+  # winning logic
+
   def display_winner
     ask_dealer_show_cards if dealer.hand.size == 2 && !user.busts?
     new_line
@@ -469,21 +501,6 @@ class TwentyOneGame
     else
       dealer.score >= user.score ? dealer : user
     end
-  end
-
-  def play_again?
-    choices = ['Y', 'N'] # (Y)es or (N)o
-    choice = nil
-
-    loop do
-      display_play_again
-      choice = gets.chomp.upcase
-      break if choices.include? choice[0]
-      new_line
-      display_try_again(choice.empty?)
-    end
-
-    choice[0] == 'Y'
   end
 end
 
