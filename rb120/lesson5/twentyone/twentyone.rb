@@ -24,12 +24,16 @@ module Formatable
     puts "=> #{MESSAGES[msg]}"
   end
 
+  def puts_yaml(msg)
+    puts "#{MESSAGES[msg]}"
+  end
+
   def puts_yaml_center(msg)
     puts MESSAGES[msg].center(80)
   end
 
-  def puts_yaml_with_var(msg, *vars)
-    puts format(MESSAGES['msg'], *vars)
+  def prompt_yaml_with_var(msg, vars)
+    puts "=> #{format(MESSAGES[msg], *vars)}"
   end
 
   def pause(time)
@@ -75,16 +79,11 @@ module Displayable
 
   def display_introductions(user, dealer)
     clear_and_new_line
-    # prompt "Welcome to the blackjack table, #{user.name}."
-    # puts_yaml_with_var('intro1', name: user.name)
-    puts format(MESSAGES['intro1'], name: user.name)
+    prompt_yaml_with_var('intro1', [name: user.name])
     pause 1
-    # prompt "My name is #{dealer.name} and I will be your dealer for this game."
-    puts_yaml_with_var('intro2', name: dealer.name)
-    My name is #{dealer.name} and I will be your dealer for this game.
+    prompt_yaml_with_var('intro2', [name: dealer.name])
     pause 0.5
-    # puts "   (btw, does it annoy you when people speak in third person?)
-    puts_yaml_with_var('intro3')
+    puts_yaml('intro3')
     pause 1.5
   end
 
@@ -312,7 +311,7 @@ class Deck
 end
 
 class Card
-  SUITS = [:Spade, :Heart, :Club, :Diamond]
+  SUITS = [:Spades, :Hearts, :Clubs, :Diamonds]
   RANKS = [2, 3, 4, 5, 6, 7, 8, 9, 10, :Jack, :Queen, :King, :Ace]
 
   attr_reader :suit, :rank
@@ -425,8 +424,8 @@ class TwentyOneGame
     ask_dealer_reveal_cards if user.busts?
 
     new_line
-    prompt "#{user.name} has #{user.displays_hand}. (#{user.score})"
-    prompt "#{dealer.name} has #{dealer.secret_hand}. (#{dealer.secret_score})"
+    prompt_yaml_with_var('show_hand', [name: user.name, hand: user.displays_hand, score: user.score])
+    prompt_yaml_with_var('show_hand', [name: dealer.name, hand: dealer.secret_hand, score: dealer.secret_score])
   end
   # rubocop:enable Metrics/AbcSize
 
@@ -446,7 +445,7 @@ class TwentyOneGame
       break if player.busts?
       pause 1.5
     end
-    puts "#{player.name} stays." if player.stays?
+    prompt_yaml_with_var('player_stays', [name: player.name]) if player.stays?
   end
 
   def play_again?
@@ -471,15 +470,15 @@ class TwentyOneGame
     new_line
 
     if winner
-      prompt "#{winner} wins the game!"
+      prompt_yaml_with_var('win_game', [name: winner])
     else
-      prompt "Tie goes to the dealer, #{dealer}!"
+      prompt_yaml_with_var('tie_game', [name: dealer])
     end
   end
 
   def display_busts
-    prompt "#{user} busts!" if user.busts?
-    prompt "#{dealer} busts!" if dealer.busts?
+    prompt_yaml_with_var('busts', [name: user]) if user.busts?
+    prompt_yaml_with_var('busts', [name: dealer]) if dealer.busts?
   end
 
   def ask_dealer_show_cards
