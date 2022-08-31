@@ -25,7 +25,7 @@ module Formatable
   end
 
   def puts_yaml(msg)
-    puts "#{MESSAGES[msg]}"
+    puts MESSAGES[msg].to_s
   end
 
   def puts_yaml_center(msg)
@@ -127,7 +127,7 @@ module Hand
     @hand = []
   end
 
-  def displays_hand(show_first_card = true) # can hide a card
+  def displays_hand(show_first_card = true)
     hand = prepends_with_articles
     hand = hides_first_card unless show_first_card
 
@@ -154,13 +154,13 @@ module Hand
     hand[1..-1].prepend first_card
   end
 
-  def cards_initial_score # ace starts with min value
+  def cards_initial_score
     hand.map do |card|
       if (2..10).include? card.rank
         card.rank
       elsif [:Jack, :Queen, :King].include? card.rank
         10
-      else # ace
+      else # ace starts with min value
         1
       end
     end
@@ -181,7 +181,7 @@ class Player
 
   def initialize
     super # from Hand
-    @stay = false # true means turn is over
+    @stay = false # true indicates turn is over
   end
 
   def to_s
@@ -226,7 +226,6 @@ class Player
   def hits(deck) # mutates the deck
     card = deck.cards.pop
     hand << card
-    prompt "#{name} draws #{card.with_article}."
   end
 
   def stays
@@ -264,6 +263,7 @@ class Dealer < Player
   def chooses_move(deck)
     self.reveals_hidden_card = true
     score < 17 ? hits(deck) : stays
+    pause 1
   end
 
   def secret_hand
@@ -405,29 +405,16 @@ class TwentyOneGame
   def play_game
     clear
     deal_cards
-    display_cards
-    new_line
     players_take_turns(deck)
     display_winner
   end
 
-  def deal_cards # 2 cards to each player
+  def deal_cards
     2.times do
       user.hand << deck.cards.pop
       dealer.hand << deck.cards.pop
     end
   end
-
-  # use yaml string interpolation
-  # rubocop:disable Metrics/AbcSize
-  def display_cards
-    ask_dealer_reveal_cards if user.busts?
-
-    new_line
-    prompt_yaml_with_var('show_hand', [name: user.name, hand: user.displays_hand, score: user.score])
-    prompt_yaml_with_var('show_hand', [name: dealer.name, hand: dealer.secret_hand, score: dealer.secret_score])
-  end
-  # rubocop:enable Metrics/AbcSize
 
   def players_take_turns(deck)
     [user, dealer].each do |player|
@@ -438,14 +425,44 @@ class TwentyOneGame
 
   def current_turn(player, deck)
     loop do
-      new_line
-      player.chooses_move(deck)
-      break if player.stays?
       display_cards
+      player.chooses_move(deck)
+      display_cards
+      display_move(player)
       break if player.busts?
-      pause 1.5
+      enter_any_key('continue')
+      break if player.stays?
     end
-    prompt_yaml_with_var('player_stays', [name: player.name]) if player.stays?
+  end
+
+  def display_cards
+    info = calculate_players_hands
+
+    clear_and_new_line
+    prompt_yaml_with_var('show_hand', info[:user])
+    prompt_yaml_with_var('show_hand', info[:dealer])
+    new_line
+  end
+
+  def calculate_players_hands
+    ask_dealer_reveal_cards if user.busts?
+
+    { user: [name: user.name,
+             hand: user.displays_hand,
+             score: user.score],
+      dealer: [name: dealer.name,
+               hand: dealer.secret_hand,
+               score: dealer.secret_score] }
+  end
+
+  def display_move(player)
+    info = [name: player.name, card: player.hand.last.with_article]
+
+    if player.stays?
+      prompt_yaml_with_var('player_stays', [name: player.name])
+    else
+      prompt_yaml_with_var('player_draws', info)
+    end
   end
 
   def play_again?
@@ -467,8 +484,8 @@ class TwentyOneGame
 
   def display_winner
     ask_dealer_show_cards if dealer.hand.size == 2 && !user.busts?
-    new_line
 
+    new_line
     if winner
       prompt_yaml_with_var('win_game', [name: winner])
     else
