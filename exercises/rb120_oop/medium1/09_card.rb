@@ -1,5 +1,6 @@
 class Card
   VALUES = {'Jack'=>11, 'Queen'=>12, 'King'=>13, 'Ace'=>14}
+
   attr_reader :rank, :suit
 
   def initialize(rank, suit)
@@ -26,34 +27,41 @@ class Card
   end
 end
 
-=begin
-# example of class in use:
-cards = [Card.new(2, 'Hearts'),
-         Card.new(10, 'Diamonds'),
-         Card.new('Ace', 'Clubs')]
-puts cards
-puts cards.min == Card.new(2, 'Hearts')
-puts cards.max == Card.new('Ace', 'Clubs')
+class Deck
+  RANKS = ((2..10).to_a + %w(Jack Queen King Ace)).freeze
+  SUITS = %w(Hearts Clubs Diamonds Spades).freeze
 
-cards = [Card.new(5, 'Hearts')]
-puts cards.min == Card.new(5, 'Hearts')
-puts cards.max == Card.new(5, 'Hearts')
+  def initialize
+    @deck = []
+    generate_new_deck
+  end
 
-cards = [Card.new(4, 'Hearts'),
-         Card.new(4, 'Diamonds'),
-         Card.new(10, 'Clubs')]
-puts cards.min.rank == 4
-puts cards.max == Card.new(10, 'Clubs')
+  def draw
+    generate_new_deck if deck.empty?
+    deck.pop
+  end
 
-cards = [Card.new(7, 'Diamonds'),
-         Card.new('Jack', 'Diamonds'),
-         Card.new('Jack', 'Spades')]
-puts cards.min == Card.new(7, 'Diamonds')
-puts cards.max.rank == 'Jack'
+  private
 
-cards = [Card.new(8, 'Diamonds'),
-         Card.new(8, 'Clubs'),
-         Card.new(8, 'Spades')]
-puts cards.min.rank == 8
-puts cards.max.rank == 8
-=end
+  attr_accessor :deck
+
+  def generate_new_deck
+    RANKS.each do |rank|
+      SUITS.each { |suit| deck << Card.new(rank, suit) }
+    end
+
+    deck.shuffle!
+  end
+end
+
+# =begin
+deck = Deck.new
+drawn = []
+52.times { drawn << deck.draw }
+p drawn.count { |card| card.rank == 5 } == 4
+p drawn.count { |card| card.suit == 'Hearts' } == 13
+
+drawn2 = []
+52.times { drawn2 << deck.draw }
+p drawn != drawn2 # Almost always.
+# =end
