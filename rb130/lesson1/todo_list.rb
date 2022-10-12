@@ -125,6 +125,28 @@ class TodoList
   #   todos.each { |task| yield(task) } # LS implementation
   # end
 
+  # def select # 1st approach
+  #   todos.select { |task| yield(task) } # returns an Array object
+  # end
+
+  # def select # 2nd approach
+  #   counter = 0
+  #   selection = TodoList.new(title)
+  #   while todos.size > counter
+  #     selection << todos[counter] if yield(todos[counter])
+  #     counter += 1
+  #   end
+  #   selection
+  # end
+
+  def select # 3rd approach
+    selection = TodoList.new(title)
+    todos.each do |task|
+      selection << task if yield(task)
+    end
+    selection
+  end
+
   private
 
   attr_reader :todos
@@ -144,7 +166,13 @@ list.add(todo2)                 # adds todo2 to end of list, returns list
 list.add(todo3)                 # adds todo3 to end of list, returns list
 # list.add(1)                     # raises TypeError with message "Can only add Todo objects"
 
-list.each { |task| puts task }
+# list.each { |task| puts task }
+
+list.mark_done_at(1)
+result = list.select { |task| task.done? }
+
+puts result.inspect
+
 =begin
 # ---- Displaying list undone and done ----
 
