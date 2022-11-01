@@ -89,19 +89,19 @@
 
 # Code:
 def bubble_sort!(arr)
-  end = (arr.length - 1)
+  the_end = (arr.length - 1)
 
   loop do
     swapped = []
 
-    0.upto(end) do |i|
+    0.upto(the_end) do |i|
       if (arr[i] <=> arr[i + 1]) == 1 # nil when accessing out of bounds element
         swapped << true
         arr[i], arr[i + 1] = arr[i + 1], arr[i]
       end
     end
 
-    end -= 1
+    the_end -= 1
     break unless swapped.any?
   end
 
@@ -110,12 +110,12 @@ end
 
 # Optimized Solution
 def bubble_sort!(arr)
-  end = (arr.end - 1)
+  the_end = (arr.length - 1)
 
   loop do
     new_end = 0
 
-    1.upto(end) do |i| # 1 to begin comparison with 1st two elements
+    1.upto(the_end) do |i| # 1 to begin comparison with 1st two elements
       [arr[i - 1], arr[i]]
 
       if arr[i - 1] > arr[i]
@@ -124,8 +124,8 @@ def bubble_sort!(arr)
       end
     end
 
-    end = new_end
-    break if end <= 1
+    the_end = new_end
+    break if the_end <= 1
   end
 
   arr
