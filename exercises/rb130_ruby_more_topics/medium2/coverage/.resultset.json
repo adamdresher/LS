@@ -1,36 +1,6 @@
 {
   "Minitest": {
     "coverage": {
-      "/Users/asdresher/code/ls_git/exercises/rb130_ruby_more_topics/medium2/01_cash_register.rb": {
-        "lines": [
-          1,
-          1,
-          null,
-          1,
-          1,
-          null,
-          null,
-          1,
-          0,
-          null,
-          null,
-          1,
-          0,
-          null,
-          null,
-          1,
-          1,
-          null,
-          null,
-          1,
-          0,
-          0,
-          0,
-          0,
-          null,
-          null
-        ]
-      },
       "/Users/asdresher/code/ls_git/exercises/rb130_ruby_more_topics/medium2/01_transaction.rb": {
         "lines": [
           1,
@@ -38,33 +8,36 @@
           1,
           null,
           1,
-          1,
-          1,
-          null,
-          null,
-          1,
-          0,
-          0,
-          0,
-          0,
-          0,
-          null,
+          3,
+          3,
           null,
           null,
           null,
           1,
+          3,
+          3,
+          4,
+          null,
+          4,
+          4,
+          1,
+          null,
+          null,
+          null,
           null,
           1,
-          0,
+          null,
+          1,
+          4,
           null,
           null,
           1,
-          0,
+          4,
           null,
           null
         ]
       }
     },
-    "timestamp": 1667402161
+    "timestamp": 1667823277
   }
 }

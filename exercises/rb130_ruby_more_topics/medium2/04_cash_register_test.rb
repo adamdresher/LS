@@ -22,4 +22,11 @@ class CashRegisterTest < Minitest::Test
     assert_equal(10.00, accepted_amount)
     assert_equal(10.00, resulting_amount)
   end
+
+  def test_change
+    @transaction_10_00.amount_paid = 20.00
+    transaction_change = @cash_register.change(@transaction_10_00)
+
+    assert_equal(10, transaction_change)
+  end
 end

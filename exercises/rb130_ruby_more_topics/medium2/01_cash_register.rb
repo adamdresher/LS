@@ -10,7 +10,7 @@ class CashRegister
   end
 
   def give_receipt(transaction)
-    puts "You've paid $#{transaction.item_cost}."
+    puts "You've paid $#{format('%.2f', transaction.item_cost)}."
   end
 
   def accept_money(transaction)
@@ -21,6 +21,9 @@ class CashRegister
     transaction.prompt_for_payment
     accept_money(transaction)
     change(transaction)
+    # transaction_change = change(transaction)
+    # return_change(transaction_change)
+    # accept_money(transaction.item_cost)
     give_receipt(transaction)
   end
 end
