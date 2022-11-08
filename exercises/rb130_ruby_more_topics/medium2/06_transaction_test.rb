@@ -13,36 +13,49 @@ class TransactionTest < Minitest::Test
     @transaction = Transaction.new(10.00)
   end
 
-  def test_prompt_for_payment_over
-    input = StringIO.new("20\n")
+  # def test_prompt_for_payment_over
+  #   input = StringIO.new("20\n")
     
-    assert_output(/You owe \$10.00./) do
-      @transaction.prompt_for_payment(input: input)
-    end
-    assert_equal(20.00, @transaction.amount_paid)
+  #   assert_output(/You owe \$10.00./) do
+  #     @transaction.prompt_for_payment(input: input)
+  #   end
+  #   assert_equal(20.00, @transaction.amount_paid)
 
-    input.close
-  end
+  #   input.close
+  # end
 
-  def test_prompt_for_payment_exact
+  # def test_prompt_for_payment_exact
+  #   input = StringIO.new("10\n")
+
+  #   assert_output(/You owe \$10.00/) do
+  #     @transaction.prompt_for_payment(input: input)
+  #   end
+  #   assert_equal(10.00, @transaction.amount_paid)
+
+  #   input.close
+  # end
+
+  def test_prompt_for_payment_exact # trying to handle output with $stdout
     input = StringIO.new("10\n")
+    output = 
 
-    assert_output(/You owe \$10.00/) do
+    # assert_output(/You owe \$10.00/) do
       @transaction.prompt_for_payment(input: input)
-    end
+    # end
     assert_equal(10.00, @transaction.amount_paid)
 
     input.close
   end
 
-  def test_prompt_for_payment_under
-    input = StringIO.new("1\n10\n")
 
-    assert_output(/This is not the correct amount./) do
-      @transaction.prompt_for_payment(input: input)
-    end
-    assert_equal(10.00, @transaction.amount_paid)
+  # def test_prompt_for_payment_under
+  #   input = StringIO.new("1\n10\n")
 
-    input.close
-  end
+  #   assert_output(/This is not the correct amount./) do
+  #     @transaction.prompt_for_payment(input: input)
+  #   end
+  #   assert_equal(10.00, @transaction.amount_paid)
+
+  #   input.close
+  # end
 end

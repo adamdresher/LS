@@ -12,7 +12,8 @@ class Transaction
     price = format('%.2f', item_cost)
     loop do
       puts "You owe $#{price}. \nHow much are you paying?"
-      # @amount_paid = gets.chomp.to_f
+      # $stdout = StreamIO.new("You owe $#{price}. \nHow much are you paying?")
+      # puts $stdout
       @amount_paid = input.gets.chomp.to_f
       break if valid_payment? && sufficient_payment?
       puts 'This is not the correct amount. ' \
