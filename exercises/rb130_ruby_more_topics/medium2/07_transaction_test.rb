@@ -11,13 +11,14 @@ require_relative '01_transaction'
 class TransactionTest < Minitest::Test
   def setup
     @transaction = Transaction.new(10.00)
+    @output = StringIO.new
   end
 
   def test_prompt_for_payment_over
     input = StringIO.new("20\n")
     
-    assert_output(/You owe \$10.00./) do
-      @transaction.prompt_for_payment(input: input)
+    assert_output(//) do # this solution siliences the output by asserting nil is found in the output
+      @transaction.prompt_for_payment(input: input, output: @output)
     end
     assert_equal(20.00, @transaction.amount_paid)
 
@@ -27,13 +28,25 @@ class TransactionTest < Minitest::Test
   def test_prompt_for_payment_exact
     input = StringIO.new("10\n")
 
-    assert_output(/You owe \$10.00/) do
+    assert_output(/You owe \$10.00/) do # this solution checks if the argument is found in the output
+      @transaction.prompt_for_payment(input: input, output: @output)
+    end
+    assert_equal(10.00, @transaction.amount_paid)
+
+    input.close
+  end
+
+  def test_prompt_for_payment_exact # trying to handle output with $stdout
+    input = StringIO.new("10\n")
+
+    capture_io do # this solution siliences the output
       @transaction.prompt_for_payment(input: input)
     end
     assert_equal(10.00, @transaction.amount_paid)
 
     input.close
   end
+
 
   def test_prompt_for_payment_under
     input = StringIO.new("1\n10\n")

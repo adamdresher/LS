@@ -7,13 +7,11 @@ class Transaction
     @amount_paid = 0
   end
 
-  # def prompt_for_payment
-  def prompt_for_payment(input: $stdin)
+  def prompt_for_payment(input: $stdin, output: $stdout)
     price = format('%.2f', item_cost)
+    
     loop do
       puts "You owe $#{price}. \nHow much are you paying?"
-      # $stdout = StreamIO.new("You owe $#{price}. \nHow much are you paying?")
-      # puts $stdout
       @amount_paid = input.gets.chomp.to_f
       break if valid_payment? && sufficient_payment?
       puts 'This is not the correct amount. ' \
