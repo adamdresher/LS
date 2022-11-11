@@ -14,7 +14,7 @@
       <img src="./assets/0.12.3/loading.gif" alt="loading"/>
     </div>
     <div id="wrapper" class="hide">
-      <div class="timestamp">Generated <abbr class="timeago" title="2022-11-10T20:57:04+07:00">2022-11-10T20:57:04+07:00</abbr></div>
+      <div class="timestamp">Generated <abbr class="timeago" title="2022-11-11T23:17:01+07:00">2022-11-11T23:17:01+07:00</abbr></div>
       <ul class="group_tabs"></ul>
 
       <div id="content">
@@ -30,7 +30,7 @@
      covered at
      <span class="covered_strength">
        <span class="green">
-         2.28
+         1.14
        </span>
     </span> hits/line
     )
@@ -43,8 +43,8 @@
   </div>
 
   <div class="t-line-summary">
-    <b>18</b> relevant lines,
-    <span class="green"><b>18</b> lines covered</span> and
+    <b>7</b> relevant lines,
+    <span class="green"><b>7</b> lines covered</span> and
     <span class="red"><b>0</b> lines missed. </span>
     (<span class="green">
   100.0%
@@ -71,13 +71,13 @@
       <tbody>
         
           <tr class="t-file">
-            <td class="strong t-file__name"><a href="#4c51dbc82388ae8f0392b16ecf5ae4aa68525012" class="src_link" title="01_transaction.rb">01_transaction.rb</a></td>
+            <td class="strong t-file__name"><a href="#e66eefc8b0c4d764e4591fc7e796a7cf76a56f33" class="src_link" title="08_text.rb">08_text.rb</a></td>
             <td class="green strong cell--number t-file__coverage">100.00 %</td>
-            <td class="cell--number">35</td>
-            <td class="cell--number">18</td>
-            <td class="cell--number">18</td>
+            <td class="cell--number">13</td>
+            <td class="cell--number">7</td>
+            <td class="cell--number">7</td>
             <td class="cell--number">0</td>
-            <td class="cell--number">2.28</td>
+            <td class="cell--number">1.14</td>
             
           </tr>
         
@@ -98,9 +98,9 @@
 
       <div class="source_files">
       
-        <div class="source_table" id="4c51dbc82388ae8f0392b16ecf5ae4aa68525012">
+        <div class="source_table" id="e66eefc8b0c4d764e4591fc7e796a7cf76a56f33">
   <div class="header">
-    <h3>01_transaction.rb</h3>
+    <h3>08_text.rb</h3>
     <h4>
       <span class="green">
   100.0%
@@ -112,8 +112,8 @@
     
 
     <div class="t-line-summary">
-      <b>18</b> relevant lines.
-      <span class="green"><b>18</b> lines covered</span> and
+      <b>7</b> relevant lines.
+      <span class="green"><b>7</b> lines covered</span> and
       <span class="red"><b>0</b> lines missed.</span>
     </div>
 
@@ -131,7 +131,7 @@
 
             
 
-            <code class="ruby">class Transaction</code>
+            <code class="ruby">class Text</code>
           </li>
         </div>
       
@@ -142,18 +142,18 @@
 
             
 
-            <code class="ruby">  attr_reader :item_cost</code>
+            <code class="ruby">  def initialize(text)</code>
           </li>
         </div>
       
         <div>
-          <li class="covered" data-hits="1" data-linenumber="3">
-            <span class="hits">1</span>
+          <li class="covered" data-hits="2" data-linenumber="3">
+            <span class="hits">2</span>
             
 
             
 
-            <code class="ruby">  attr_accessor :amount_paid</code>
+            <code class="ruby">    @text = text</code>
           </li>
         </div>
       
@@ -164,40 +164,40 @@
 
             
 
+            <code class="ruby">  end</code>
+          </li>
+        </div>
+      
+        <div>
+          <li class="never" data-hits="" data-linenumber="5">
+            
+            
+
+            
+
             <code class="ruby"></code>
           </li>
         </div>
       
         <div>
-          <li class="covered" data-hits="1" data-linenumber="5">
+          <li class="covered" data-hits="1" data-linenumber="6">
             <span class="hits">1</span>
             
 
             
 
-            <code class="ruby">  def initialize(item_cost)</code>
+            <code class="ruby">  def swap(letter_one, letter_two)</code>
           </li>
         </div>
       
         <div>
-          <li class="covered" data-hits="3" data-linenumber="6">
-            <span class="hits">3</span>
+          <li class="covered" data-hits="1" data-linenumber="7">
+            <span class="hits">1</span>
             
 
             
 
-            <code class="ruby">    @item_cost = item_cost</code>
-          </li>
-        </div>
-      
-        <div>
-          <li class="covered" data-hits="3" data-linenumber="7">
-            <span class="hits">3</span>
-            
-
-            
-
-            <code class="ruby">    @amount_paid = 0</code>
+            <code class="ruby">    @text.gsub(letter_one, letter_two)</code>
           </li>
         </div>
       
@@ -224,13 +224,13 @@
         </div>
       
         <div>
-          <li class="never" data-hits="" data-linenumber="10">
-            
-            
-
+          <li class="covered" data-hits="1" data-linenumber="10">
+            <span class="hits">1</span>
             
 
-            <code class="ruby">  # def prompt_for_payment</code>
+            
+
+            <code class="ruby">  def word_count</code>
           </li>
         </div>
       
@@ -241,265 +241,23 @@
 
             
 
-            <code class="ruby">  def prompt_for_payment(input: $stdin, output: $stdout)</code>
+            <code class="ruby">    @text.split.count</code>
           </li>
         </div>
       
         <div>
-          <li class="covered" data-hits="3" data-linenumber="12">
-            <span class="hits">3</span>
+          <li class="never" data-hits="" data-linenumber="12">
+            
             
 
             
 
-            <code class="ruby">    price = format(&#39;%.2f&#39;, item_cost)</code>
+            <code class="ruby">  end</code>
           </li>
         </div>
       
         <div>
           <li class="never" data-hits="" data-linenumber="13">
-            
-            
-
-            
-
-            <code class="ruby">    </code>
-          </li>
-        </div>
-      
-        <div>
-          <li class="covered" data-hits="3" data-linenumber="14">
-            <span class="hits">3</span>
-            
-
-            
-
-            <code class="ruby">    loop do</code>
-          </li>
-        </div>
-      
-        <div>
-          <li class="covered" data-hits="4" data-linenumber="15">
-            <span class="hits">4</span>
-            
-
-            
-
-            <code class="ruby">      puts &quot;You owe $#{price}. \nHow much are you paying?&quot;</code>
-          </li>
-        </div>
-      
-        <div>
-          <li class="never" data-hits="" data-linenumber="16">
-            
-            
-
-            
-
-            <code class="ruby">      # $stdout = StreamIO.new(&quot;You owe $#{price}. \nHow much are you paying?&quot;, &quot;This is not the correct amount. Please make sure to pay the full amount.&quot;)</code>
-          </li>
-        </div>
-      
-        <div>
-          <li class="never" data-hits="" data-linenumber="17">
-            
-            
-
-            
-
-            <code class="ruby">      # puts $stdout</code>
-          </li>
-        </div>
-      
-        <div>
-          <li class="covered" data-hits="4" data-linenumber="18">
-            <span class="hits">4</span>
-            
-
-            
-
-            <code class="ruby">      @amount_paid = input.gets.chomp.to_f</code>
-          </li>
-        </div>
-      
-        <div>
-          <li class="covered" data-hits="4" data-linenumber="19">
-            <span class="hits">4</span>
-            
-
-            
-
-            <code class="ruby">      break if valid_payment? &amp;&amp; sufficient_payment?</code>
-          </li>
-        </div>
-      
-        <div>
-          <li class="covered" data-hits="1" data-linenumber="20">
-            <span class="hits">1</span>
-            
-
-            
-
-            <code class="ruby">      puts &#39;This is not the correct amount. &#39; \</code>
-          </li>
-        </div>
-      
-        <div>
-          <li class="never" data-hits="" data-linenumber="21">
-            
-            
-
-            
-
-            <code class="ruby">           &#39;Please make sure to pay the full cost.&#39;</code>
-          </li>
-        </div>
-      
-        <div>
-          <li class="never" data-hits="" data-linenumber="22">
-            
-            
-
-            
-
-            <code class="ruby">      # puts $stdout</code>
-          </li>
-        </div>
-      
-        <div>
-          <li class="never" data-hits="" data-linenumber="23">
-            
-            
-
-            
-
-            <code class="ruby">    end</code>
-          </li>
-        </div>
-      
-        <div>
-          <li class="never" data-hits="" data-linenumber="24">
-            
-            
-
-            
-
-            <code class="ruby">  end</code>
-          </li>
-        </div>
-      
-        <div>
-          <li class="never" data-hits="" data-linenumber="25">
-            
-            
-
-            
-
-            <code class="ruby"></code>
-          </li>
-        </div>
-      
-        <div>
-          <li class="covered" data-hits="1" data-linenumber="26">
-            <span class="hits">1</span>
-            
-
-            
-
-            <code class="ruby">  private</code>
-          </li>
-        </div>
-      
-        <div>
-          <li class="never" data-hits="" data-linenumber="27">
-            
-            
-
-            
-
-            <code class="ruby"></code>
-          </li>
-        </div>
-      
-        <div>
-          <li class="covered" data-hits="1" data-linenumber="28">
-            <span class="hits">1</span>
-            
-
-            
-
-            <code class="ruby">  def valid_payment?</code>
-          </li>
-        </div>
-      
-        <div>
-          <li class="covered" data-hits="4" data-linenumber="29">
-            <span class="hits">4</span>
-            
-
-            
-
-            <code class="ruby">    @amount_paid &gt; 0.0</code>
-          </li>
-        </div>
-      
-        <div>
-          <li class="never" data-hits="" data-linenumber="30">
-            
-            
-
-            
-
-            <code class="ruby">  end</code>
-          </li>
-        </div>
-      
-        <div>
-          <li class="never" data-hits="" data-linenumber="31">
-            
-            
-
-            
-
-            <code class="ruby"></code>
-          </li>
-        </div>
-      
-        <div>
-          <li class="covered" data-hits="1" data-linenumber="32">
-            <span class="hits">1</span>
-            
-
-            
-
-            <code class="ruby">  def sufficient_payment?</code>
-          </li>
-        </div>
-      
-        <div>
-          <li class="covered" data-hits="4" data-linenumber="33">
-            <span class="hits">4</span>
-            
-
-            
-
-            <code class="ruby">    @amount_paid &gt;= @item_cost</code>
-          </li>
-        </div>
-      
-        <div>
-          <li class="never" data-hits="" data-linenumber="34">
-            
-            
-
-            
-
-            <code class="ruby">  end</code>
-          </li>
-        </div>
-      
-        <div>
-          <li class="never" data-hits="" data-linenumber="35">
             
             
 

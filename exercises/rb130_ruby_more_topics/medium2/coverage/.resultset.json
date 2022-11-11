@@ -1,46 +1,24 @@
 {
   "Minitest": {
     "coverage": {
-      "/Users/asdresher/code/ls_git/exercises/rb130_ruby_more_topics/medium2/01_transaction.rb": {
+      "/Users/asdresher/code/ls_git/exercises/rb130_ruby_more_topics/medium2/08_text.rb": {
         "lines": [
           1,
           1,
-          1,
-          null,
-          1,
-          3,
-          3,
-          null,
+          2,
           null,
           null,
           1,
-          3,
-          null,
-          3,
-          4,
-          null,
-          null,
-          4,
-          4,
           1,
           null,
           null,
-          null,
-          null,
-          null,
           1,
-          null,
           1,
-          4,
-          null,
-          null,
-          1,
-          4,
           null,
           null
         ]
       }
     },
-    "timestamp": 1668088624
+    "timestamp": 1668183421
   }
 }
