@@ -22,20 +22,21 @@ class RomanNumeral
 
   private
 
+  # disabled to maintain readability
+  # rubocop:disable Lint/Syntax
   def num_to_roman(num, power)
     return '' if num == 0
 
-    quotnt, remainder = num.divmod(5)
+    quotient, remainder = num.divmod(5)
 
     case remainder
-    when 4
-      roman_chars(num, power)
-    when (1..)
-      roman_chars(num, power, quotnt) + roman_chars(remainder, power, remainder)
-    else
-      roman_chars(num, power, quotnt)
+    when 4   then roman_chars(num, power)
+    when 1.. then roman_chars(num, power, quotient) +
+                  roman_chars(remainder, power, remainder)
+    else          roman_chars(num, power, quotient)
     end
   end
+  # rubocop:enable Lint/Syntax
 
   def roman_chars(num, power, multiplier=1)
     ROMAN_LIBRARY[power][num_to_range(num, power)] * multiplier

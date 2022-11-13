@@ -1,7 +1,7 @@
 #### Problem
 Goal: Create a program that converts modern decimal numbers into equivalent roman numbers.
 Input: Integer
-Output: String
+Return: String
 Rules:
 - max number is 3_000
 - modern decimal numbers are expressed in Roman numerals as separate digits from left to right
