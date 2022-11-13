@@ -24,8 +24,8 @@ There are 7 different characters resulting in a Hamming distance of 7.
     - initialize an instance variable to an Array of argument's characters
   - `#hamming_distance`
     - take 1 string argument
-    - compare argument against caller's dna strand
-    - iterate through first DNA strand with index
+    - identify shorter and longer dna strands: argument and caller's dna strand 
+    - iterate through shorter DNA strand with index
       - compare current nucleotide with nucleotide from other DNA using current index
       - count number of occurrences that don't match
     - return number of occurrences that don't match
