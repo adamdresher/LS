@@ -7,9 +7,9 @@ class Triangle
 
   def kind
     case @sides.uniq.count
-    when 1 then return 'equilateral'
-    when 2 then return 'isosceles'
-    else        return 'scalene'
+    when 1 then 'equilateral'
+    when 2 then 'isosceles'
+    else        'scalene'
     end
   end
 
@@ -17,6 +17,6 @@ class Triangle
 
   def invalid_triangle?
     @sides.any? { |side| side <= 0 } ||
-    @sides.any? { |side| (@sides.sum - side) <= side }
+      @sides.any? { |side| (@sides.sum - side) <= side }
   end
 end
