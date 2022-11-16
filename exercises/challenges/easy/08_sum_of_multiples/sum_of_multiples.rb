@@ -1,4 +1,3 @@
-# cumbersome solution
 class SumOfMultiples
   @@factors = [3, 5]
 
@@ -6,39 +5,23 @@ class SumOfMultiples
     @factors = factors
   end
 
-  def self.to(limit)
-    find_sum(@@factors, limit)
+  def self.to(limit, factors=@@factors)
+    factors.each_with_object([]) do |factor, multiples|
+      current_factor = factor
+
+      while current_factor < limit
+        multiples << current_factor
+        current_factor += factor
+      end
+    end.uniq.sum
   end
 
   def to(limit)
-    # self.class.to(limit)
-    self.class.find_sum(@factors, limit)
-  end
-
-  class << self
-
-  # private
-  # making this method private results in SumOfMultiples#to not having access
-
-    def find_sum(list, limit)
-      multiples = []
-
-      list.each do |factor|
-        factor_multiplied = factor
-
-        while factor_multiplied < limit
-          # p multiples
-          multiples << factor_multiplied
-          factor_multiplied += factor
-        end
-      end
-
-      multiples.uniq.sum
-    end
+    self.class.to(limit, @factors)
   end
 end
 
-# not working yet, but this was my original approach
+# # cumbersome solution
 # class SumOfMultiples
 #   @@factors = [3, 5]
 
@@ -46,25 +29,34 @@ end
 #     @factors = factors
 #   end
 
-#   def to(limit)
-#     self.class.to(limit)
+#   def self.to(limit)
+#     find_sum(@@factors, limit)
 #   end
 
-#   def self.to(limit)
-#     multiples = []
+#   def to(limit)
+#     # self.class.to(limit)
+#     self.class.find_sum(@factors, limit)
+#   end
 
-#     factors = @factors ? @factors : @@factors # issue here
+#   class << self
 
-#     factors.each do |factor|
-#       factor_multiplied = factor
+#   # private
+#   # making this method private results in SumOfMultiples#to not having access
 
-#       while factor_multiplied < limit
-#         # p multiples
-#         multiples << factor_multiplied
-#         factor_multiplied += factor
+#     def find_sum(list, limit)
+#       multiples = []
+
+#       list.each do |factor|
+#         factor_multiplied = factor
+
+#         while factor_multiplied < limit
+#           multiples << factor_multiplied
+#           factor_multiplied += factor
+#         end
 #       end
-#     end
 
-#     multiples.uniq.sum
+#       multiples.uniq.sum
+#     end
 #   end
 # end
+

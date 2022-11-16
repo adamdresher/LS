@@ -19,7 +19,7 @@ Rules:
 
 #### Algorithm
 - `SumOfMultiples` class
-  - create class variable to `[3, 5]`, default value
+  - create class variable to store `[3, 5]` as default value
 
   - `#initialize`
     - accepts an Array argument, list of numbers
