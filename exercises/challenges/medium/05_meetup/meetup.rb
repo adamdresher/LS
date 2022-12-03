@@ -1,12 +1,14 @@
 class Meetup
   WEEKDAY_NUM =
-    { sunday:    0,
-      monday:    1,
-      tuesday:   2,
+    {
+      sunday: 0,
+      monday: 1,
+      tuesday: 2,
       wednesday: 3,
-      thursday:  4,
-      friday:    5,
-      saturday:  6 }
+      thursday: 4,
+      friday: 5,
+      saturday: 6
+    }.freeze
 
   def initialize(year, month)
     @year = year
@@ -17,15 +19,18 @@ class Meetup
   def day(day_of_week, descriptor)
     day_of_week = day_of_week.downcase
     descriptor = descriptor.downcase
-    range_of_days = days_of_month(descriptor)
-    day_of_month(range_of_days, day_of_week)
+    days_of_month = range_of_days(descriptor)
+
+    day_of_month(days_of_month, day_of_week)
   end
 
   private
 
   attr_reader :year, :month, :last_day_in_month
 
-  def days_of_month(descriptor)
+  # preference towards case statement for readability
+  # rubocop:disable Metrics/CyclomaticComplexity
+  def range_of_days(descriptor)
     case descriptor
     when 'first'  then 1..7
     when 'second' then 8..14
@@ -36,6 +41,7 @@ class Meetup
     when 'last'   then (last_day_in_month - 6)..last_day_in_month
     end
   end
+  # rubocop:enable Metrics/CyclomaticComplexity
 
   def day_of_month(range, day_of_week)
     range.each do |day|

@@ -44,6 +44,7 @@ hash with descriptors as keys and potential days of the month as values
     - instantiate a `year` var:          `YYYY` (4 digits)
     - instantiate a `month` var:         `M` (1 integer)
     - instantiate a `days_in_month` var: `Date.new(YYYY, M, -1).day`
+
   - `#day(day_of_week, descriptor)`
     - case descriptor
     - when 'first'
