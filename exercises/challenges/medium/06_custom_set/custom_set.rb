@@ -20,7 +20,8 @@ class CustomSet
   end
 
   def eql?(other)
-    set == other.set
+    set.size == other.set.size &&
+    set.all? { |obj| other.contains? obj }
   end
 
   def add(obj)
@@ -44,7 +45,7 @@ class CustomSet
   end
 
   def ==(other)
-    set === other.set
+    set.eql? other.set
   end
 
   protected
