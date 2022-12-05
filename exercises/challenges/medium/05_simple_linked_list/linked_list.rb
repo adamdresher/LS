@@ -17,9 +17,9 @@ class SimpleLinkedList
   end
 
   def self.from_a(obj)
-    new_list = SimpleLinkedList.new
-    return new_list if obj.nil?
+    obj = [] if obj.nil?
 
+    new_list = SimpleLinkedList.new
     obj.reverse_each { |value| new_list.push value }
     new_list
   end
@@ -41,8 +41,7 @@ class SimpleLinkedList
   end
 
   def peek
-    return nil if empty?
-    list.last.datum
+    empty? ? nil : head.datum
   end
 
   def pop
@@ -50,7 +49,7 @@ class SimpleLinkedList
   end
 
   def to_a
-    list.reverse.map { |element| element.datum }
+    list.reverse.map(&:datum)
   end
 
   def reverse
