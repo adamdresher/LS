@@ -1,0 +1,10 @@
+<h2>User Info:</h2>
+<ul>
+  <li><b>Email address: </b><%= @user_info[:email] %></li>
+  <li><b>Interests:</b></li>
+    <ul>
+      <% @user_info[:interests].each do |interest| %>
+        <li><%= interest %></li>
+      <% end %>
+    </ul>
+</ul>

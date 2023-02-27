@@ -11,7 +11,17 @@ helpers do
   end
 end
 
-get "/" do
+before do
   @users = Psych.load_file "data/users.yaml"
+end
+
+get "/" do
   erb :index
+end
+
+get "/:user" do
+  @user = params['user']
+  @user_info = @users[@user.downcase.to_sym]
+
+  erb :user
 end
