@@ -1,53 +1,21 @@
 <!doctype html>
 <html>
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>Users and Interests</title>
-
-    <link rel="stylesheet" href="/stylesheets/pure-min.css">
-    <link rel="stylesheet" href="/stylesheets/fonts.css">
-    <link rel="stylesheet" href="/stylesheets/index.css">
+  <title>Users and Interests</title>
 </head>
 
 <body>
-  <div id="layout">
-      <a href="#menu" id="menuLink" class="menu-link">
-          <span></span>
-      </a>
 
-      <div id="menu">
-          <div class="pure-menu">
-              <h2 class="pure-menu-heading">Users</h2>
+  <div>
+    <%= yield %>
 
-              <ul class="pure-menu-list">
-                <!-- iterate through yaml list and display each user as a link to a user view -->
-                <% @users.each do |user| %>
-                  <li>
-                    <% name = user.first.capitalize %>
-                    <a href="/<%= name %>"><%= name %></a>
-                  </li>
-                <% end %>
-              </ul>
-          </div>
-      </div>
-
-      <div id="main">
-        <div class="header">
-        </div>
-
-        <div class="content">
-
-              <%= yield %>
-
-              <br>
-              <p>There are NUM users with NUM interests.</p>
-        </div>
-      </div>
+    <br>
+    <p><em>There are a total of <%= @users.size %> users with <%= count_interests(@users) %> interests.</em></p>
   </div>
 
-  <script type="text/javascript" src="/javascripts/ui.js"></script>
 </body>
 </html>
 

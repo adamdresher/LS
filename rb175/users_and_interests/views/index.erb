@@ -1,1 +1,13 @@
-<p>Please select a user.<p>
+<h3>Please select a user for more information.</h3>
+
+<div>
+  <b>Users</b>
+  <ul>
+    <% @users.each do |user| %>
+      <li>
+        <% name = user.first.capitalize %>
+        <a href="/<%= name %>"><%= name %></a>
+      </li>
+    <% end %>
+  </ul>
+</div>

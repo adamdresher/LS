@@ -1,13 +1,13 @@
 require "tilt/erubis"
 require "sinatra"
 require "sinatra/reloader"
-require "psych"
+require "psych" # equivalent to "yaml"
 
 helpers do
+  # determines the total number of unique interests of all users
   # returns an Integer
-  # determines the total number of interests of all users
-  def count_interests
-
+  def count_interests(users)
+    users.map { |_, v| v[:interests] }.flatten.uniq.count
   end
 end
 
@@ -21,7 +21,8 @@ end
 
 get "/:user" do
   @user = params['user']
-  @user_info = @users[@user.downcase.to_sym]
+  @email = @users[@user.downcase.to_sym][:email]
+  @interests = @users[@user.downcase.to_sym][:interests]
 
   erb :user
 end
