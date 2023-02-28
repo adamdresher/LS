@@ -20,12 +20,13 @@ get "/" do
 end
 
 get "/:user" do
-  @user = params['user']
+  @user = params['user'].downcase.to_sym
 
   redirect "/" unless @users.keys.include? @user
 
-  @email = @users[@user.downcase.to_sym][:email]
-  @interests = @users[@user.downcase.to_sym][:interests]
+  @email = @users[@user][:email]
+  @interests = @users[@user][:interests]
+  @other_users = @users.reject { |other, _| other == @user }
 
   erb :user
 end

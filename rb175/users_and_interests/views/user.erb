@@ -1,6 +1,6 @@
 <h3>User Info</h3>
 <ul>
-  <li><b>Name: </b><%= @user %></li>
+  <li><b>Name: </b><%= @user.capitalize %></li>
   <li><b>Email address: </b><%= @email %></li>
 
   <li><b>Interests:</b></li>
@@ -14,13 +14,16 @@
 <div>
   <h4>Other Users</h4>
   <ul>
-    <% @users.each do |user| %>
-      <% name = user.first.capitalize.to_s  %>
-      <% unless name == @user %>
-        <li>
-          <a href="/<%= name %>"><%= name %></a>
-        </li>
-      <% end %>
+    <% @other_users.each do |user| %>
+      <li>
+        <% name = user.first.capitalize.to_s %>
+        <a href="/<%= name %>"><%= name %></a>
+      </li>
     <% end %>
+  </ul>
+  <ul>
+    <li>
+      <a href="/">Return to index</a>
+    </li>
   </ul>
 </div>
