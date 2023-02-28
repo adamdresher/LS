@@ -21,8 +21,15 @@ end
 
 get "/:user" do
   @user = params['user']
+
+  redirect "/" unless @users.keys.include? @user
+
   @email = @users[@user.downcase.to_sym][:email]
   @interests = @users[@user.downcase.to_sym][:interests]
 
   erb :user
+end
+
+not_found do
+  redirect "/"
 end
