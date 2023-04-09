@@ -20,7 +20,7 @@ get "/" do
 end
 
 get "/:user" do
-  @user = params['user'].downcase.to_sym
+  @user = params[:user].downcase.to_sym
 
   redirect "/" unless @users.keys.include? @user
 
