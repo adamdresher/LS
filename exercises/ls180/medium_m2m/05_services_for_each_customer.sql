@@ -17,13 +17,14 @@ JOIN customers c
   GROUP BY name;
 
 /* return a joined table of customers and each service they are using (each service on a new row) */
-SELECT customers.name,
-       lag(customers.name)
-         OVER (ORDER BY customers.name)
-         AS previous,
+SELECT CASE lag(customers.name) OVER (ORDER BY customers.name)
+       WHEN customers.name THEN ''
+       ELSE customers.name
+       END,
        services.description
 FROM customers
 LEFT OUTER JOIN customers_services
              ON customer_id = customers.id
 LEFT OUTER JOIN services
              ON services.id = service_id;
+
