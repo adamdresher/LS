@@ -46,7 +46,7 @@ VALUES ('Unix Hosting', 5.95),
        ('Bulk Email', 250),
        ('One-to-one Training', 999);
 
-CREATE TABLE customer_services
+CREATE TABLE customers_services
 (
   id serial PRIMARY KEY,
   customer_id integer NOT NULL
@@ -57,7 +57,7 @@ CREATE TABLE customer_services
   UNIQUE (customer_id, service_id)
 );
 
-INSERT INTO customer_services
+INSERT INTO customers_services
        (customer_id, service_id)
 VALUES (1, 1),
        (1, 2),
