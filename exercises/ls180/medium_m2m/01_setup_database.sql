@@ -14,16 +14,17 @@ CREATE DATABASE billing;
 */
 
 CREATE TABLE customers (
-  id serial PRIMARY KEY,
-  name text UNIQUE NOT NULL,
-  payment_token char(8) UNIQUE NOT NULL CHECK (payment_token ~ '^[A-Z]{8}$')
+             id serial PRIMARY KEY,
+             name text UNIQUE NOT NULL,
+             payment_token char(8) UNIQUE NOT NULL CHECK (payment_token ~ '^[A-Z]{8}$')
 );
 
 CREATE TABLE services (
-  id serial PRIMARY KEY,
-  description text NOT NULL,
-  /* description varchar NOT NULL, */
-  price numeric(10,2) CONSTRAINT positive_price CHECK (price >= 0) NOT NULL
+             id serial PRIMARY KEY,
+             description text NOT NULL,
+             /* alternative
+             description varchar NOT NULL, */
+             price numeric(10,2) CONSTRAINT positive_price CHECK (price >= 0) NOT NULL
 );
 
 INSERT INTO customers
@@ -46,15 +47,14 @@ VALUES ('Unix Hosting', 5.95),
        ('Bulk Email', 250),
        ('One-to-one Training', 999);
 
-CREATE TABLE customers_services
-(
-  id serial PRIMARY KEY,
-  customer_id integer NOT NULL
-    REFERENCES customers(id)
-    ON DELETE CASCADE,
-  service_id integer NOT NULL
-    REFERENCES services(id),
-  UNIQUE (customer_id, service_id)
+CREATE TABLE customers_services (
+       id serial PRIMARY KEY,
+       customer_id integer NOT NULL 
+                         REFERENCES customers(id)
+                                 ON DELETE CASCADE,
+       service_id integer NOT NULL
+                        REFERENCES services(id),
+       UNIQUE (customer_id, service_id)
 );
 
 INSERT INTO customers_services
